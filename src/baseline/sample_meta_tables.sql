@@ -14,7 +14,6 @@ CREATE TABLE collection_information (
 	sample_id int4 UNIQUE REFERENCES samples(id),
 	sample_collected_by int4 REFERENCES agencies(ontology_term_id),
 	contact_information int4 REFERENCES contact_information(id),
-	sample_collection_project_name text,
 	sample_collection_date date,
 	sample_collection_date_precision int4 REFERENCES sample_collection_date_precision(ontology_term_id),
 	presampling_activity_details text,
@@ -49,8 +48,8 @@ CREATE TABLE geo_loc_name_sites (
 CREATE TABLE geo_loc (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	sample_id int4 UNIQUE NOT NULL REFERENCES samples(id),
-	country int4 REFERENCES countries(gaz_term_id),
-	province_region int4 REFERENCES state_province_regions(gaz_term_id),
+	country int4 REFERENCES countries(id),
+	province_region int4 REFERENCES state_province_regions(id),
 	site int4 REFERENCES geo_loc_name_sites(id),
 	latitude point,
 	longitude point
@@ -62,7 +61,7 @@ CREATE TABLE food_data (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	sample_id int4 UNIQUE REFERENCES samples(id),
 	food_product_production_stream int4 REFERENCES food_product_production_streams(ontology_term_id),
-	food_product_origin_country int4 REFERENCES countries(gaz_term_id),
+	food_product_origin_country int4 REFERENCES countries(id),
 	food_packaging_date date,
 	food_quality_date date 
 );
@@ -174,12 +173,12 @@ CREATE TABLE host_diseases (
 CREATE TABLE hosts (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	sample_id int4 UNIQUE NOT NULL REFERENCES samples(id),
-	host_organism int4 REFERENCES host_organisms(organism_term_id),
+	host_organism int4 REFERENCES host_organisms(id),
 	host_ecotype text,
 	host_breed int4 REFERENCES host_breeds(id),
 	host_food_production_name int4 REFERENCES host_food_production_names(ontology_term_id),
 	host_disease int4 REFERENCES host_diseases(id),
 	host_age_bin int4 REFERENCES host_age_bin(ontology_term_id),
-	host_origin_geo_loc_name_country int4 REFERENCES countries(gaz_term_id)
+	host_origin_geo_loc_name_country int4 REFERENCES countries(id)
 );
 

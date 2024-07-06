@@ -7,7 +7,7 @@ CREATE TABLE isolates (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	sample_id int4 NOT NULL REFERENCES samples(id),
 	isolate_id text NOT NULL,
-	organism int4 REFERENCES isolate_organisms(organism_term_id),
+	organism int4 REFERENCES microbes(id),
 	strain int4 REFERENCES strains(id),
 	microbiological_method text,
 	progeny_isolate_id text,

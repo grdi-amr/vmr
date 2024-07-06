@@ -8,28 +8,25 @@ CREATE TABLE ontology_terms (
 	curated bool DEFAULT true
 );
 
-CREATE TABLE organism_terms (
+CREATE TABLE microbes (
 	id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	ontology_id text UNIQUE NOT NULL,
 	scientific_name text,
-	common_name_en text,
-	common_name_fr text,
+	curated bool DEFAULT true
+);
+
+CREATE TABLE host_organisms (
+	id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	ontology_id text UNIQUE NOT NULL,
+	scientific_name text,
+	en_common_name text,
+	fr_common_name text,
 	en_description text,
 	fr_description text,
 	curated bool DEFAULT true
 );
 
-CREATE TABLE isolate_organisms (
-	organism_term_id int4 PRIMARY KEY REFERENCES organism_terms(id),
-	curated bool DEFAULT true
-);
-
-CREATE TABLE host_organisms (
-	organism_term_id int4 PRIMARY KEY REFERENCES organism_terms(id),
-	curated bool DEFAULT true
-);
-
-CREATE TABLE gaz_terms (
+CREATE TABLE countries (
 	id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	ontology_id text UNIQUE NOT NULL,
 	en_term text,
@@ -38,13 +35,15 @@ CREATE TABLE gaz_terms (
 	fr_description text,
 	curated bool DEFAULT true
 );
-CREATE TABLE countries (
-	gaz_term_id int4 PRIMARY KEY REFERENCES gaz_terms(id),
-	curated bool DEFAULT true
-);
 
 CREATE TABLE state_province_regions (
-	gaz_term_id int4 PRIMARY KEY REFERENCES gaz_terms(id),
+	id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	ontology_id text UNIQUE NOT NULL,
+	country_id int4 REFERENCES countries(id),
+	en_term text,
+	fr_term text,
+	en_description text,
+	fr_description text,
 	curated bool DEFAULT true
 );
 

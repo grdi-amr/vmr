@@ -14,40 +14,31 @@ terms <-
   filter(!is.na(Id)) %>%
   arrange(Field)
 
-# Get the gazette ontology terms.
-gaz_ontology <-
+# Countries and States.
+countries <-
   terms %>%
-  filter(grepl(x=Field, "state") | grepl(x=Field, "country")) %>%
+  filter(grepl(x=Field, "country")) %>%
   select(Term, Id) %>%
   rename(ontology_id = Id, en_term = Term) %>%
   distinct() %>%
-  filter(!duplicated(ontology_id)) %>%
-  arrange(en_term)
-dbAppendTable(vmr, name = "gaz_terms", value = gaz_ontology)
-print("Swaziland removed from gazette ontology")
+  arrange(ontology_id) %>%
+  filter(!en_term == "Swaziland")
+dbAppendTable(vmr, name = "countries", value = countries)
 
-# Insert into states lookup table
+canada_id <-
+  dbSendQuery(vmr, "SELECT id FROM countries WHERE en_term = 'Canada'") %>%
+  dbFetch() %>% pull(id)
 states <-
   terms %>%
-  filter(grepl(x=Field, "state"))  %>%
-  pull(Id)
+  filter(grepl(x=Field, "state")) %>%
+  select(Term, Id) %>%
+  rename(ontology_id = Id, en_term = Term) %>%
+  arrange(ontology_id) %>%
+  filter(!grepl(x=ontology_id, "GENEPIO")) %>%
+  mutate(country_id = canada_id)
+dbAppendTable(vmr, name = "state_province_regions", value = states)
 
-insert_states.sql <-
-  glue::glue_sql("INSERT INTO state_province_regions (gaz_term_id) VALUES
-                 ((SELECT id FROM gaz_terms WHERE ontology_id = $1))")
-dbExecute(vmr, insert_states.sql, params = list(states))
-
-# Insert into the countries lookup table
-countries <-
-  terms %>%
-  filter(grepl(x=Field, "country"))  %>%
-  pull(Id) %>% unique()
-
-insert_country.sql <-
-  glue::glue_sql("INSERT INTO countries (gaz_term_id) VALUES
-                 ((SELECT id FROM gaz_terms WHERE ontology_id = $1))")
-dbExecute(vmr, insert_country.sql, params = list(countries))
-
+# Organisms.
 host_org_names <-
   df %>%
   filter(grepl(x=Field, "common") | grepl(x=Field, "scientific")) %>%
@@ -56,45 +47,17 @@ host_org_names <-
   janitor::clean_names() %>%
   rename(ontology_id = id,
          scientific_name = host_scientific_name,
-         common_name_en = host_common_name) %>%
-  mutate(field = "host_organism")
+         en_common_name = host_common_name)
+dbAppendTable(vmr, name = "host_organisms", value = host_org_names)
 
-isolate_org_names <-
+isolate_orgs <-
   df %>%
   filter(Field=="organism") %>%
   rename(ontology_id = Id,
          scientific_name = Term) %>%
   select(-Field, -version) %>%
-  mutate(field = "isolate_organism")
+  filter(scientific_name != "Streptococcus equinus")
+dbAppendTable(vmr, name = "microbes", value = isolate_orgs)
 
-all_org <-
-  bind_rows(host_org_names, isolate_org_names) %>%
-  arrange(ontology_id) %>%
-  filter(!grepl(x=ontology_id, "GENEPIO")) %>%
-  filter(scientific_name != "Streptococcus bovis")
-
-dbAppendTable(vmr, name = "organism_terms", value = all_org)
-
-# Insert isolate orgs
-isolate_orgs <-
-  all_org %>%
-  filter(field == "isolate_organism") %>%
-  pull(ontology_id)
-
-dbExecute(vmr,
-          "INSERT INTO isolate_organisms (organism_term_id) VALUES
-           ((SELECT id FROM organism_terms WHERE ontology_id = $1))"),
-          params = list(isolate_orgs))
-
-# Insert host orgs
-host_orgs <-
-  all_org %>%
-  filter(field == "host_organism") %>%
-  pull(ontology_id)
-
-dbExecute(vmr,
-          "INSERT INTO host_organisms (organism_term_id) VALUES
-          ((SELECT id FROM organism_terms WHERE ontology_id = $1))",
-          params = list(host_orgs))
 
 
