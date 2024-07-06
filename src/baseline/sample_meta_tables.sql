@@ -10,7 +10,7 @@ CREATE TABLE contact_information (
 -- Collection information
 
 CREATE TABLE collection_information (
-	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY NOT NULL,
+	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	sample_id int4 UNIQUE REFERENCES samples(id),
 	sample_collected_by int4 REFERENCES agencies(ontology_term_id),
 	contact_information int4 REFERENCES contact_information(id),
