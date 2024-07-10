@@ -23,12 +23,6 @@ CREATE TABLE samples (
 	validation_status public."status"
 );
 
-CREATE TABLE sample_plan (
-	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	sample_id int4 REFERENCES samples(id),
-	sample_plan_id text,
-	sample_plan_name text
-);
 
 CREATE TABLE alternative_sample_ids (
 	sample_id int4 PRIMARY KEY REFERENCES samples(id),
