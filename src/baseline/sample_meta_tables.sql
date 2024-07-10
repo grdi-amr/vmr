@@ -7,11 +7,18 @@ CREATE TABLE contact_information (
 	contact_email text
 );
 
+CREATE TABLE sample_plans (
+	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	user_id text,
+	name text
+);
+
 -- Collection information
 
 CREATE TABLE collection_information (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	sample_id int4 UNIQUE REFERENCES samples(id),
+	sample_plan_id int4 REFERENCES sample_plans(id),
 	sample_collected_by int4 REFERENCES agencies(ontology_term_id),
 	contact_information int4 REFERENCES contact_information(id),
 	sample_collection_date date,
@@ -49,7 +56,7 @@ CREATE TABLE geo_loc (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	sample_id int4 UNIQUE NOT NULL REFERENCES samples(id),
 	country int4 REFERENCES countries(id),
-	province_region int4 REFERENCES state_province_regions(id),
+	state_province_region int4 REFERENCES state_province_regions(id),
 	site int4 REFERENCES geo_loc_name_sites(id),
 	latitude point,
 	longitude point
@@ -96,9 +103,14 @@ CREATE TABLE environmental_data (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	sample_id int4 UNIQUE NOT NULL REFERENCES samples(id),
 	air_temperature float8,
+	air_temperature_units int4 REFERENCES temperature_units(ontology_term_id),
+	water_temperature float8, 
+	water_temperature_units int4 REFERENCES temperature_units(ontology_term_id),
 	sediment_depth float8,
-	water_depth float8,
-	water_temperature float8
+	sediment_depth_units int4 REFERENCES depth_units(ontology_term_id),
+	water_depth int4,
+	water_depth_units int4 REFERENCES depth_units(ontology_term_id),
+	available_data_type_details text
 );
 
 CREATE TABLE environmental_data_site (
