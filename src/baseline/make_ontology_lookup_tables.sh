@@ -26,6 +26,8 @@ lu=(
 	"environmental_materials"
 	"animal_or_plant_populations"
 	"environmental_sites"
+	"temperature_units"
+	"depth_units"
 	# Sequencing 
 	"sequencing_assay_types"
 	"sequencing_instruments"
@@ -54,9 +56,7 @@ lu=(
 	"quality_control_determinations"
 	# Hosts 
 	"host_age_bin"
-	"host_common_names"
 	"host_food_production_names"
-	"host_scientific_names"
 	# AMR antibiotics profiles 
 	"antimicrobial_agents"
 	"antimicrobial_phenotypes"
