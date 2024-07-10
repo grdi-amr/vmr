@@ -8,7 +8,8 @@ populate_lookup_table <- function(con, lookup_table, terms){
     glue::glue_sql(
       .con = con,
       "INSERT into ", lookup_table,
-      " (ontology_term_id) VALUES ( (SELECT id FROM ontology_terms WHERE ontology_id = $1) )")
+      " (ontology_term_id) VALUES ( (SELECT id FROM ontology_terms WHERE ontology_id = $1) )
+      ON CONFLICT (ontology_term_id) DO NOTHING")
   dbExecute(con, query_string, params = list(terms))
 }
 
@@ -113,7 +114,8 @@ terms_to_ins <-
   group_by(foreign_table_name) %>%
   summarise(ontology_terms = list(Id)) %>%
   rowwise() %>%
-  mutate(ontology_terms = list(unique(ontology_terms)))
+  mutate(ontology_terms = list(unique(ontology_terms))) %>%
+  filter(!foreign_table_name %in% c("prevalence_metrics", "stage_of_production"))
 
 unique_terms <-
   terms_insert %>%
@@ -122,7 +124,6 @@ unique_terms <-
   distinct() %>%
   filter(!duplicated(Id)) %>%
   rename(ontology_id = Id, en_term = Term)
-
 dbAppendTable(vmr, name = "ontology_terms", value = unique_terms)
 
 mapply(populate_lookup_table,
