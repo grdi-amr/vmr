@@ -22,15 +22,14 @@ psql --dbname $DB --file ${dir}/ast.sql
 psql --dbname $DB --file ${dir}/bioinformatics.sql
 psql --dbname $DB --file ${dir}/misc.sql
 
-# Input lookup tables 
-
-for f in data/*.sql
+# Input data
+for f in baseline/data/*.sql
 do
 	psql --dbname $DB --file "$f"
 done
 
 # Views 
-psql --dbname $DB --file ../views/foreign_keys.sql
+psql --dbname $DB --file views/foreign_keys.sql
 # Functions 
-psql --dbname $DB --file ../function
+psql --dbname $DB --file functions/functions.sql
 
