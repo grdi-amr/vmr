@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DB=$1
-dir="sql"
+dir="baseline/sql"
 
 # Create the DB
 createdb $DB
@@ -10,7 +10,7 @@ createdb $DB
 psql --dbname $DB --file ${dir}/ontology_tables.sql
 
 # Make the ontology lookup tables
-bash make_ontology_lookup_tables.sh | psql --dbname $DB --file=-
+bash baseline/ontology_lookups.sh | psql --dbname $DB --file=-
 
 # Assemble the main data tables
 psql --dbname $DB --file ${dir}/samples.sql
