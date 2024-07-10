@@ -16,10 +16,17 @@ CREATE TABLE isolates (
 	isolation_date date,
 	isolate_received_date date,
 	taxonomic_identification_process int4 REFERENCES taxonomic_identification_processes(ontology_term_id),
-	taxonomic_identification_details text, 
+	taxonomic_identification_process_details text, 
 	serovar text,
 	serotyping_method text,
 	phagetype text
+);
+
+CREATE TABLE alternative_isolate_ids (
+	isolate_id int4 NOT NULL REFERENCES isolates(id),
+	alternative_isolate_id text NOT NULL,
+	note text NULL,
+	CONSTRAINT alt_iso_ids_keep_unique UNIQUE (isolate_id, alternative_isolate_id)
 );
 
 -- Risk Assesment 
