@@ -19,3 +19,17 @@ psql --dbname $DB --file seq_bioinf.sql
 psql --dbname $DB --file ast.sql 
 # bioinformatics schema
 psql --dbname $DB --file bioinformatics.sql
+psql --dbname $DB --file misc.sql
+
+# Input lookup tables 
+
+for f in data/*.sql
+do
+	psql --dbname $DB --file "$f"
+done
+
+# Views 
+psql --dbname $DB --file ../../views/foreign_keys.sql
+# Functions 
+psql --dbname $DB --file ../../function
+
