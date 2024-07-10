@@ -9,12 +9,12 @@ CREATE TABLE sequencing (
 	sequencing_platform int4 REFERENCES sequencing_platforms(ontology_term_id),
 	sequencing_instrument int4 REFERENCES sequencing_instruments(ontology_term_id),
 	sequencing_assay_type int4 REFERENCES sequencing_assay_types(ontology_term_id),
-	dna_fragment_length text,
+	dna_fragment_length int4,
 	genomic_target_enrichment_method int4 REFERENCES genomic_target_enrichment_methods(ontology_term_id),
 	genomic_target_enrichment_method_details text,
 	amplicon_pcr_primer_scheme text,
 	amplicon_size text,
-	sequencing_flow_cell text,
+	sequencing_flow_cell_version text,
 	library_preparation_kit text,
 	sequencing_protocol text,
 	irida_isolate_id text,
@@ -60,7 +60,7 @@ CREATE TABLE extraction_information (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	sequencing_id int4 REFERENCES sequencing(id),
 	experimental_protocol_field text,
-	exprimental_specimen_role_type int4 REFERENCES experimental_specimen_role_types(ontology_term_id),
+	experimental_specimen_role_type int4 REFERENCES experimental_specimen_role_types(ontology_term_id),
 	nucleic_acid_extraction_method text,
 	nucleic_acid_extraction_kit text,
 	sample_volume_measurement_value float8,
@@ -68,7 +68,8 @@ CREATE TABLE extraction_information (
 	residual_sample_status int4 REFERENCES residual_sample_status(ontology_term_id),
 	sample_storage_duration_value float8,
 	sample_storage_duration_unit int4 REFERENCES duration_units(ontology_term_id),
-	nucleic_acid_storage_duration_value float8
+	nucleic_acid_storage_duration_value float8,
+	nucleic_acid_storage_duration_unit int4 REFERENCES duration_units(ontology_term_id)
 );
 
 CREATE TABLE read_mapping_software_names (
@@ -87,6 +88,11 @@ CREATE TABLE sequence_assembly_software (
 	name text NOT NULL
 );
 
+CREATE TABLE consensus_sequence_software (
+	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	name text NOT NULL
+);
+
 CREATE TABLE user_bioinformatic_analyses (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	sequencing_id int4 REFERENCES sequencing(id),
@@ -99,15 +105,18 @@ CREATE TABLE user_bioinformatic_analyses (
 	dehosting_method text,
 	sequence_assembly_software int4 REFERENCES sequence_assembly_software(id),
 	sequence_assembly_software_version text,
+	consensus_sequence_software int4 REFERENCES consensus_sequence_software(id),
+	consensus_sequence_software_version text,
 	breadth_of_coverage_value float8,
 	depth_of_coverage_value float8,
 	depth_of_coverage_threshold float8,
-	genome_completness float8,
+	genome_completeness float8,
 	number_of_base_pairs_sequenced int4,
-	number_of_totalreads int4,
+	number_of_total_reads int4,
 	number_of_unique_reads int4,
 	minimum_post_trimming_read_length int4,
 	number_of_contigs int4,
+	percent_n float8,
 	ns_per_100_kbp float8,
 	n50 float8,
 	percent_read_contamination float8,
@@ -117,5 +126,10 @@ CREATE TABLE user_bioinformatic_analyses (
 	deduplication_method text,
 	bioinformatics_protocol text,
 	read_mapping_software_name int4 REFERENCES read_mapping_software_names(id),
-	read_mapping_software_version text
+	read_mapping_software_version text, 
+	taxonomic_reference_database_name text,
+	taxonomic_reference_database_version text,
+	taxonomic_analysis_report_filename text,
+	taxonomic_analysis_date date,
+	read_mapping_criteria text
 );
