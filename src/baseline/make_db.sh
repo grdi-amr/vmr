@@ -30,7 +30,7 @@ do
 done
 
 # Views 
-psql --dbname $DB --file ../../views/foreign_keys.sql
+psql --dbname $DB --file ../views/foreign_keys.sql
 # Functions 
-psql --dbname $DB --file ../../function
+psql --dbname $DB --file ../function
 
