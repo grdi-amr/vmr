@@ -61,10 +61,10 @@ COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, 
 59	Environmental conditions and measurements	water_temperature_units	environmental_data	water_temperature_units	t	f
 60	Environmental conditions and measurements	weather_type	environmental_data_weather_type	term_id	t	t
 61	Host information	host (breed)	hosts	host_breed	f	f
-62	Host information	host (common name)	hosts	host_organism	t	f
+62	Host information	host (common name)	host_organisms	en_common_name	t	f
 63	Host information	host (ecotype)	hosts	host_ecotype	f	f
 64	Host information	host (food production name)	hosts	host_food_production_name	t	f
-65	Host information	host (scientific name)	hosts	host_organism	t	f
+65	Host information	host (scientific name)	host_organisms	scientific_name	t	f
 66	Host information	host_age_bin	hosts	host_age_bin	t	f
 67	Host information	host_disease	hosts	host_disease	f	f
 68	Public repository information	attribute_package	public_repository_information	attribute_package	t	f
@@ -96,7 +96,7 @@ COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, 
 94	Sample collection and processing	environmental_site	environmental_data_site	term_id	t	t
 95	Sample collection and processing	experimental _protocol_field	extraction_information	experimental_protocol_field	f	f
 96	Sample collection and processing	experimental_specimen_role _type	extraction_information	experimental_specimen_role_type	f	f
-97	Sample collection and processing	food_packaging	food_data_packaging	term_id	t	f
+97	Sample collection and processing	food_packaging	food_data_packaging	term_id	t	t
 98	Sample collection and processing	food_packaging_date	food_data	food_packaging_date	f	f
 99	Sample collection and processing	food_product	food_data_product	term_id	t	t
 100	Sample collection and processing	food_product_origin geo_loc (country)	food_data	food_product_origin_country	t	f
@@ -113,8 +113,8 @@ COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, 
 111	Sample collection and processing	nucleic acid extraction method	extraction_information	nucleic_acid_extraction_method	f	f
 112	Sample collection and processing	nucleic_acid_storage_duration_unit	extraction_information	nucleic_acid_storage_duration_unit	t	f
 113	Sample collection and processing	nucleic_acid_storage_duration_value	extraction_information	nucleic_acid_storage_duration_value	f	f
-114	\N	sample_volume_measurement_value	extraction_information	sample_volume_measurement_value	f	f
-115	\N	sample_volume_measurement_unit	extraction_information	sample_volume_measurement_unit	t	t
+114	Sample collection and processing	sample_volume_measurement_value	extraction_information	sample_volume_measurement_value	f	f
+115	Sample collection and processing	sample_volume_measurement_unit	extraction_information	sample_volume_measurement_unit	t	t
 116	Sample collection and processing	original_sample_description	collection_information	original_sample_description	f	f
 117	Sample collection and processing	presampling_activity	sample_activity	term_id	t	t
 118	Sample collection and processing	presampling_activity_details	collection_information	presampling_activity_details	f	f
