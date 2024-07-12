@@ -4,7 +4,8 @@ CREATE TABLE contact_information (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	laboratory_name text,
 	contact_name text,
-	contact_email text
+	contact_email text,
+	note text
 );
 
 CREATE TABLE sample_plans (
