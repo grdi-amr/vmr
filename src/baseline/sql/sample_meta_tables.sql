@@ -8,18 +8,12 @@ CREATE TABLE contact_information (
 	note text
 );
 
-CREATE TABLE sample_plans (
-	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	user_id text,
-	name text
-);
-
 -- Collection information
 
 CREATE TABLE collection_information (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	sample_id int4 UNIQUE REFERENCES samples(id),
-	sample_plan_id int4 REFERENCES sample_plans(id),
+	project_id int4 REFERENCES projects(id),
 	sample_collected_by int4 REFERENCES agencies(ontology_term_id),
 	contact_information int4 REFERENCES contact_information(id),
 	sample_collection_date date,

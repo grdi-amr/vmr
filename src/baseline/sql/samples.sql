@@ -1,6 +1,8 @@
 CREATE TABLE projects (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	name text, 
+	sample_plan_id text,
+	sample_plan_name text,
+	project_name text,
 	description text
 );
 
@@ -30,7 +32,4 @@ CREATE TABLE alternative_sample_ids (
 	note text,
 	CONSTRAINT alt_sample_ids_keep_unique UNIQUE (sample_id, alternative_sample_id)
 );
-
-
-
 

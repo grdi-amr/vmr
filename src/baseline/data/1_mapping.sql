@@ -128,8 +128,8 @@ COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, 
 126	Sample collection and processing	sample_collector_contact_email	collection_information	contact_information	f	f
 127	Sample collection and processing	sample_collector_contact_name	collection_information	contact_information	f	f
 128	Sample collection and processing	sample_collector_sample_ID	samples	sample_collector_sample_id	f	f
-129	Sample collection and processing	sample_plan_ID	collection_information	sample_plan_id	f	f
-130	Sample collection and processing	sample_plan_name	collection_information	sample_plan_id	f	f
+129	Sample collection and processing	sample_plan_ID	collection_information	project_id	f	f
+130	Sample collection and processing	sample_plan_name	collection_information	project_id	f	f
 131	Sample collection and processing	sample_received_date	collection_information	sample_received_date	f	f
 132	Sample collection and processing	sample_storage_duration_unit	extraction_information	sample_storage_duration_unit	t	f
 133	Sample collection and processing	sample_storage_duration_value	extraction_information	sample_storage_duration_value	f	f
