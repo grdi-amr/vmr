@@ -35,7 +35,7 @@ CREATE TABLE risk_assessment (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	isolate_id int4 REFERENCES isolates(id),
 	sample_id int4 REFERENCES samples(id),
-	prevalence_metrics int4 REFERENCES prevalence_metrics(ontology_term_id),
+	prevalence_metrics text, 
 	prevalence_metrics_details text,
 	stage_of_production int4 REFERENCES stage_of_production(ontology_term_id),
 	experimental_intervention_details text
