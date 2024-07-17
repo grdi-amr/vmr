@@ -18,7 +18,8 @@ AS
           projects.project_name,
           concat_ws(' | ', latitude, longitude) AS lat_lon, 
           i.serovar, 
-          bind_ontology(seqed_by.en_term, seqed_by.ontology_id) AS sequenced_by
+          bind_ontology(seqed_by.en_term, seqed_by.ontology_id) AS sequenced_by, 
+          host.host AS host
      FROM isolates AS i
 LEFT JOIN samples AS s 
        ON i.sample_id = s.id
@@ -50,6 +51,8 @@ LEFT JOIN ohe.source_type AS src_type
        ON s.id = src_type.sample_id
 LEFT JOIN ontology_terms AS col_device 
        ON c.collection_device = col_device.id
+LEFT JOIN ohe.host as host
+       ON s.id = host.sample_id
 ;
 
 CREATE OR REPLACE VIEW ohe.country_state 
@@ -127,4 +130,16 @@ LEFT JOIN food_product_agg AS f
       AND f.terms NOT LIKE 'Not %'
 ;
 
+CREATE VIEW ohe.host  
+AS 
+SELECT org.sample_id,
+       CASE WHEN org.ontology_id IS NOT NULL THEN bind_ontology(org.en_common_name, org.ontology_id)
+       ELSE bind_ontology(fd_prod.en_term, fd_prod.ontology_id)
+       END AS host
+FROM ohe.host_organism AS org
+LEFT JOIN hosts AS h
+ON org.sample_id = h.sample_id
+LEFT JOIN ontology_terms AS fd_prod
+ON h.host_food_production_name = fd_prod.id
+;
 
