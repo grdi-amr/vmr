@@ -49,7 +49,6 @@ lu=(
 	"food_products"
 	"food_packaging"
 	# Risk Assesment 
-	"prevalence_metrics"
 	"stage_of_production"
 	# Bioinfomratics 
 	"quality_control_issues"
