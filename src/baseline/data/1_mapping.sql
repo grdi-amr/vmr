@@ -76,7 +76,7 @@ COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, 
 74	Public repository information	sequence_submitted_by_contact_email	public_repository_information	contact_information	f	f
 75	Public repository information	sequence_submitted_by_contact_name	public_repository_information	contact_information	f	f
 76	Public repository information	SRA_accession	public_repository_information	sra_accession	f	f
-77	Risk assessment information	experimental_intervention_details	risk_assessment	experimental_intervention_details	f	f
+77	Risk assessment information	experiment_intervention_details	risk_assessment	experimental_intervention_details	f	f
 78	Risk assessment information	experimental_intervention	risk_activity	term_id	t	t
 79	Risk assessment information	prevalence_metrics	risk_assessment	prevalence_metrics	f	f
 80	Risk assessment information	prevalence_metrics_details	risk_assessment	prevalence_metrics_details	f	f
