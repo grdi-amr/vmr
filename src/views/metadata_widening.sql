@@ -86,6 +86,16 @@ LEFT JOIN ontology_terms AS o
        ON pro.term_id = o.id
  GROUP BY sample_id;
 
+CREATE OR REPLACE VIEW sample_purposes_agg
+AS 
+   SELECT ci.sample_id,
+	  string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS terms 
+     FROM collection_information AS ci
+LEFT JOIN sample_purposes AS pu
+       ON ci.id = pu.id
+LEFT JOIN ontology_terms AS o 
+       ON pu.term_id = o.id 
+ GROUP BY sample_id;
 
 CREATE OR REPLACE VIEW full_sample_metadata 
        AS
