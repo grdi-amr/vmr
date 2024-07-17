@@ -12,11 +12,13 @@ AS
           c.sample_collection_date AS collection_date,
           i.isolation_date AS cult_isol_date,
           country.geo_loc_name, 
+          src_type.source_type,
+          bind_ontology(col_device.en_term, col_device.ontology_id) AS samp_collect_device,
+          sp.terms AS purpose_of_sampling,
           projects.project_name,
           concat_ws(' | ', latitude, longitude) AS lat_lon, 
-          bind_ontology(seqed_by.en_term, seqed_by.ontology_id) AS sequenced_by,
           i.serovar, 
-          src_type.source_type 
+          bind_ontology(seqed_by.en_term, seqed_by.ontology_id) AS sequenced_by
      FROM isolates AS i
 LEFT JOIN samples AS s 
        ON i.sample_id = s.id
@@ -40,12 +42,15 @@ LEFT JOIN projects
        ON s.project_id = projects.id
 LEFT JOIN geo_loc 
        ON s.id = geo_loc.sample_id
-LEFT JOIN ontology_terms as seqed_by 
+LEFT JOIN sample_purposes_agg AS sp 
+       ON s.id = sp.sample_id
+LEFT JOIN ontology_terms AS seqed_by 
        ON wgs.sequenced_by = seqed_by.id
 LEFT JOIN ohe.source_type AS src_type 
        ON s.id = src_type.sample_id
+LEFT JOIN ontology_terms AS col_device 
+       ON c.collection_device = col_device.id
 ;
-
 
 CREATE OR REPLACE VIEW ohe.country_state 
 AS 
