@@ -1,27 +1,13 @@
 CREATE SCHEMA IF NOT EXISTS ohe;
 
-DROP VIEW IF EXISTS one_health_ent;
-CREATE VIEW one_health_ent 
-AS
+
+DROP VIEW IF EXISTS ohe.sample_identifiers;
+CREATE VIEW ohe.sample_identifiers
+AS 
    SELECT i.isolate_id AS sample_name,
           p.bioproject_accession,
           COALESCE(strains.strain, i.isolate_id) AS strain,
-          alt_iso_wide.alt_isolate_names AS isolate_name_alias,
-          microbes.scientific_name AS organism, 
-          bind_ontology(agencies.en_term, agencies.ontology_id) AS collected_by, 
-          c.sample_collection_date AS collection_date,
-          i.isolation_date AS cult_isol_date,
-          country.geo_loc_name, 
-          src_type.source_type,
-          bind_ontology(col_device.en_term, col_device.ontology_id) AS samp_collect_device,
-          sp.terms AS purpose_of_sampling,
-          projects.project_name,
-          concat_ws(' | ', latitude, longitude) AS lat_lon, 
-          i.serovar, 
-          bind_ontology(seqed_by.en_term, seqed_by.ontology_id) AS sequenced_by, 
-          host_col.host AS host, 
-          h.host_age_bin AS host_age, 
-          host_diseases.host_disease
+          alt_iso_wide.alt_isolate_names AS isolate_name_alias
      FROM isolates AS i
 LEFT JOIN samples AS s 
        ON i.sample_id = s.id
@@ -33,6 +19,28 @@ LEFT JOIN strains
        ON i.id = strains.id
 LEFT JOIN alt_iso_wide 
        ON alt_iso_wide.isolate_id = i.id
+;
+
+
+DROP VIEW IF EXISTS ohe.collection_information;
+CREATE VIEW ohe.collection_information
+AS
+   SELECT s.id AS sample_id,
+          microbes.scientific_name AS organism, 
+          bind_ontology(agencies.en_term, agencies.ontology_id) AS collected_by, 
+          c.sample_collection_date AS collection_date,
+          i.isolation_date AS cult_isol_date,
+          country.geo_loc_name, 
+          src_type.source_type,
+          bind_ontology(col_device.en_term, col_device.ontology_id) AS samp_collect_device,
+          sp.terms AS purpose_of_sampling,
+          projects.project_name,
+          concat_ws(' | ', latitude, longitude) AS lat_lon, 
+          i.serovar, 
+          bind_ontology(seqed_by.en_term, seqed_by.ontology_id) AS sequenced_by
+     FROM isolates AS i
+LEFT JOIN samples AS s 
+       ON i.sample_id = s.id
 LEFT JOIN microbes 
        ON i.organism = microbes.id
 LEFT JOIN collection_information as c 
@@ -47,19 +55,51 @@ LEFT JOIN geo_loc
        ON s.id = geo_loc.sample_id
 LEFT JOIN sample_purposes_agg AS sp 
        ON s.id = sp.sample_id
+LEFT JOIN wgs
+       ON wgs.isolate_id = i.id 
 LEFT JOIN ontology_terms AS seqed_by 
        ON wgs.sequenced_by = seqed_by.id
 LEFT JOIN ohe.source_type AS src_type 
        ON s.id = src_type.sample_id
 LEFT JOIN ontology_terms AS col_device 
        ON c.collection_device = col_device.id
-LEFT JOIN ohe.host as host_col
-       ON s.id = host_col.sample_id
+;
+
+
+DROP VIEW IF EXISTS ohe.host_data;
+CREATE VIEW ohe.host_data
+AS 
+   SELECT s.id AS sample_id,
+          host_col.host AS host, 
+          bind_ontology(age_ont.en_term, age_ont.ontology_id) AS host_age,
+          host_diseases.host_disease, 
+          env_site.terms AS environmental_site, 
+          ana_mat.terms AS host_tissue_sampled, 
+          body_prod.terms AS host_body_product, 
+          h.host_ecotype AS host_variety, 
+          breeds.host_breed AS host_animal_breed
+     FROM isolates AS i
+LEFT JOIN samples AS s 
+       ON i.sample_id = s.id
 LEFT JOIN hosts as h 
        ON s.id = h.sample_id
+LEFT JOIN ohe.host as host_col
+       ON s.id = host_col.sample_id
+LEFT JOIN ontology_terms AS age_ont 
+       ON h.host_age_bin = age_ont.id
 LEFT JOIN host_diseases 
        ON h.host_disease = host_diseases.id
+LEFT JOIN environmental_site_agg as env_site 
+       ON s.id = env_site.sample_id
+LEFT JOIN anatomical_material_agg AS ana_mat 
+       ON s.id = ana_mat.sample_id
+LEFT JOIN body_product_agg AS body_prod
+       ON s.id = body_prod.sample_id
+LEFT JOIN host_breeds AS breeds 
+       ON h.host_breed = breeds.id
 ;
+SELECT * FROM ohe.host_data LIMIT 3;
+
 
 CREATE OR REPLACE VIEW ohe.country_state 
 AS 
