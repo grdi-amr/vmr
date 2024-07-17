@@ -1,27 +1,101 @@
 CREATE OR REPLACE VIEW animal_source_of_food_agg 
        AS
-   SELECT food_data AS food_data_id,
-	  string_agg(bind_ontology(o.en_term, o.ontology_id), ';') AS animal_source_of_food
-     FROM food_data_source 
+   SELECT fd.sample_id AS sample_id,
+	  string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS terms
+    FROM food_data AS fd  
+LEFT JOIN food_data_source AS fd_src
+       ON fd.id = fd_src.id
 LEFT JOIN ontology_terms AS o
-       ON animal_source_of_food = o.id
- GROUP BY food_data_id;
+       ON fd_src.term_id = o.id
+ GROUP BY sample_id;
 
 CREATE OR REPLACE VIEW environmental_site_agg 
        AS
-   SELECT environmental_data AS env_data_id, 
-	  string_agg(bind_ontology(o.en_term, o.ontology_id), ';') AS environmental_site
-     FROM environment_data_site
+   SELECT env.sample_id AS sample_id,
+	  string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS terms
+     FROM environmental_data as env
+LEFT JOIN environmental_data_site AS site
+       ON site.id = env.id
 LEFT JOIN ontology_terms AS o
-       ON environmental_site = o.id
- GROUP BY env_data_id;
+       ON site.term_id = o.id
+ GROUP BY sample_id;
+
+CREATE OR REPLACE VIEW environmental_material_agg 
+       AS
+   SELECT env.sample_id AS sample_id,
+	  string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS terms 
+     FROM environmental_data as env
+LEFT JOIN environmental_data_material AS mat
+       ON mat.id = env.id
+LEFT JOIN ontology_terms AS o
+       ON mat.term_id = o.id
+ GROUP BY sample_id;
+
+CREATE OR REPLACE VIEW body_product_agg
+       AS
+   SELECT a.sample_id AS sample_id,
+	  string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS terms 
+     FROM anatomical_data AS a
+LEFT JOIN anatomical_data_body AS body
+       ON a.id = body.id
+LEFT JOIN ontology_terms AS o
+       ON body.term_id = o.id
+ GROUP BY sample_id;
+
+CREATE OR REPLACE VIEW anatomical_material_agg
+       AS
+   SELECT a.sample_id AS sample_id,
+	  string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS terms 
+     FROM anatomical_data AS a
+LEFT JOIN anatomical_data_material AS mat
+       ON a.id = mat.id
+LEFT JOIN ontology_terms AS o
+       ON mat.term_id = o.id
+ GROUP BY sample_id;
+
+CREATE OR REPLACE VIEW anatomical_part_agg
+       AS
+   SELECT a.sample_id AS sample_id,
+	  string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS terms
+     FROM anatomical_data AS a
+LEFT JOIN anatomical_data_part AS part
+       ON a.id = part.id
+LEFT JOIN ontology_terms AS o
+       ON part.term_id = o.id
+ GROUP BY sample_id;
+
+CREATE OR REPLACE VIEW food_product_agg
+       AS
+   SELECT f.sample_id AS sample_id,
+	  string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS terms 
+     FROM food_data AS f
+LEFT JOIN food_data_product AS pro
+       ON f.id = pro.id
+LEFT JOIN ontology_terms AS o
+       ON pro.term_id = o.id
+ GROUP BY sample_id;
+
+CREATE OR REPLACE VIEW food_product_properties_agg
+       AS
+   SELECT f.sample_id AS sample_id,
+	  string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS terms 
+     FROM food_data AS f
+LEFT JOIN food_data_product_property AS pro
+       ON f.id = pro.id
+LEFT JOIN ontology_terms AS o
+       ON pro.term_id = o.id
+ GROUP BY sample_id;
+
 
 CREATE OR REPLACE VIEW full_sample_metadata 
        AS
    SELECT s.id,
           s.sample_collector_sample_id,
+          p.sample_plan_id,
+          p.sample_plan_names, 
+          p.project_name,
+          c.id AS collection_information_id,
           c.sample_collected_by,
-          c.sample_plan,
           c.collection_method,
           c.collection_device,
           c.sample_storage_medium,
@@ -32,13 +106,15 @@ CREATE OR REPLACE VIEW full_sample_metadata
           c.presampling_activity_details,
           c.sample_collection_date_precision,
           c.sample_collection_date,
-          c.sample_collection_project_name,
           c.contact_information,
-          g.geo_loc_name_country,
-          g.geo_loc_name_state_province_region,
-          g.geo_loc_name_site,
-          g.geo_loc_latitude,
-          g.geo_loc_longitude,
+          ci.laboratory_name AS sample_collected_by_laboratory_name, 
+          ci.contact_name AS sample_collector_contact_name, 
+          ci.contact_email AS sample_collector_contact_email,
+          g.country AS geo_loc_country
+          g.state_province_region AS geo_loc_name_state_province_region,
+          site.geo_loc_name_site AS geo_loc_name_site,
+          g.latitude AS geo_loc_latitude,
+          g.longitude AS geo_loc_longitude,
           e.id AS environmental_data_id,
           e.air_temperature,
           e.sediment_depth,
@@ -62,10 +138,16 @@ CREATE OR REPLACE VIEW full_sample_metadata
           f.food_packaging_date,
           f.food_quality_date
      FROM samples AS s
+LEFT JOIN projects as p
+       ON s.id = p.id
 LEFT JOIN collection_information AS c
        ON s.id = c.sample_id
+LEFT JOIN contact_information AS ci
+       ON c.contact_information = ci.id
 LEFT JOIN geo_loc AS g 
        ON s.id = g.sample_id
+LEFT JOIN geo_loc_name_sites AS site 
+       ON g.site = site.id
 LEFT JOIN environmental_data AS e
        ON s.id = e.sample_id
 LEFT JOIN hosts AS h
@@ -75,31 +157,29 @@ LEFT JOIN anatomical_data AS a
 LEFT JOIN food_data AS f
        ON s.id = f.sample_id;
 
-CREATE OR REPLACE VIEW hosts_readable 
+CREATE OR REPLACE VIEW hosts_wide
        AS
    SELECT h.id AS host_id,
           h.sample_id AS sample_id,
-          bind_ontology(com_name.en_term, com_name.ontology_id) AS host_common_name,
-          bind_ontology(sci_name.en_term, sci_name.ontology_id) AS host_scientific_name,
           h.host_ecotype,
+          bind_ontology(ho.en_common_name, ho.ontology_id) AS host_common_name,
+          bind_ontology(ho.scientific_name, ho.ontology_id) AS host_scientific_name,
           h.host_breed,
           bind_ontology(prod_name.en_term, prod_name.ontology_id) AS host_food_production_name,
           h.host_disease,
           bind_ontology(age.en_term, age.ontology_id) AS host_age_bin,
-          bind_ontology(geo.en_term, geo.ontology_id) AS host_origin_geo_loc_name_country
+          bind_ontology(c.en_term, c.ontology_id) AS host_origin_geo_loc_name_country
      FROM hosts AS h 
+LEFT JOIN host_organisms AS ho
+       ON h.host_organism = ho.id
 LEFT JOIN ontology_terms AS age
        ON h.host_age_bin = age.id 
-LEFT JOIN ontology_terms AS com_name
-       ON h.host_common_name = com_name.id 
-LEFT JOIN ontology_terms AS sci_name
-       ON h.host_scientific_name = sci_name.id 
 LEFT JOIN ontology_terms AS prod_name
        ON h.host_food_production_name = prod_name.id 
-LEFT JOIN ontology_terms AS geo
-       ON h.host_origin_geo_loc_name_country = geo.id;
+LEFT JOIN countries AS c
+       ON h.host_origin_geo_loc_name_country = c.id;
 
-CREATE OR REPLACE VIEW anatomical_data_readable 
+CREATE OR REPLACE VIEW anatomical_data_wide
        AS
    SELECT a.id AS anatomical_data_id,
           a.sample_id AS sample_id, 
@@ -116,3 +196,10 @@ LEFT JOIN ontology_terms as part
        ON a.anatomical_part = part.id
 LEFT JOIN ontology_terms as material
        ON a.anatomical_material = material.id;
+
+CREATE OR REPLACE VIEW wgs
+       AS
+   SELECT * 
+     FROM sequencing AS seq
+LEFT JOIN wholegenomesequencing AS wgs
+       ON seq.id = wgs.sequencing_id;
