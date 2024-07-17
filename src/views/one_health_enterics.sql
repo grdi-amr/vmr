@@ -19,7 +19,9 @@ AS
           concat_ws(' | ', latitude, longitude) AS lat_lon, 
           i.serovar, 
           bind_ontology(seqed_by.en_term, seqed_by.ontology_id) AS sequenced_by, 
-          host.host AS host
+          host_col.host AS host, 
+          h.host_age_bin AS host_age, 
+          host_diseases.host_disease
      FROM isolates AS i
 LEFT JOIN samples AS s 
        ON i.sample_id = s.id
@@ -51,8 +53,12 @@ LEFT JOIN ohe.source_type AS src_type
        ON s.id = src_type.sample_id
 LEFT JOIN ontology_terms AS col_device 
        ON c.collection_device = col_device.id
-LEFT JOIN ohe.host as host
-       ON s.id = host.sample_id
+LEFT JOIN ohe.host as host_col
+       ON s.id = host_col.sample_id
+LEFT JOIN hosts as h 
+       ON s.id = h.sample_id
+LEFT JOIN host_diseases 
+       ON h.host_disease = host_diseases.id
 ;
 
 CREATE OR REPLACE VIEW ohe.country_state 
