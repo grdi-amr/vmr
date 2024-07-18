@@ -28,9 +28,9 @@ do
 	psql --dbname $DB --file "$f"
 done
 
+# Functions 
+psql --dbname $DB --file functions/functions.sql
 # Views 
 psql --dbname $DB --file views/foreign_keys.sql
 psql --dbname $DB --file views/views.sql
-# Functions 
-psql --dbname $DB --file functions/functions.sql
 
