@@ -1,7 +1,37 @@
+-- Extraction
+
+CREATE TABLE extractions (
+	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	experimental_protocol_field text,
+	experimental_specimen_role_type int4 REFERENCES experimental_specimen_role_types(ontology_term_id),
+	nucleic_acid_extraction_method text,
+	nucleic_acid_extraction_kit text,
+	sample_volume_measurement_value float8,
+	sample_volume_measurement_unit int4 REFERENCES volume_measurement_units(ontology_term_id),
+	residual_sample_status int4 REFERENCES residual_sample_status(ontology_term_id),
+	sample_storage_duration_value float8,
+	sample_storage_duration_unit int4 REFERENCES duration_units(ontology_term_id),
+	nucleic_acid_storage_duration_value float8,
+	nucleic_acid_storage_duration_unit int4 REFERENCES duration_units(ontology_term_id)
+);
+
+CREATE TABLE metagenomic_extractions (
+	sample_id int4 NOT NULL REFERENCES samples(id),
+	extraction_id int4 NOT NULL REFERENCES extractions(id),
+	CONSTRAINT metagenomic_extractions_pkey PRIMARY KEY (sample_id, extraction_id)
+);
+
+CREATE TABLE wgs_extractions (
+	isolate_id int4 NOT NULL REFERENCES isolates(id),
+  extraction_id int4 NOT NULL REFERENCES extractions(id),
+	CONSTRAINT wgs_extractions_pkey PRIMARY KEY (isolate_id, extraction_id)
+);
+
 -- Sequencing 
 
 CREATE TABLE sequencing (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	extraction_id int4 REFERENCES extractions(id),
 	library_id text,
 	contact_information int4 REFERENCES contact_information(id),
 	sequenced_by int4 REFERENCES agencies(ontology_term_id),
@@ -31,18 +61,6 @@ CREATE TABLE sequencing_purposes (
 	CONSTRAINT sequencing_purposes_pkey PRIMARY KEY (id, term_id)
 );
 
-CREATE TABLE metagenomics (
-	sample_id int4 NOT NULL REFERENCES samples(id),
-	sequencing_id int4 NOT NULL REFERENCES sequencing(id),
-	CONSTRAINT metagenomics_pkey PRIMARY KEY (sample_id, sequencing_id)
-);
-
-CREATE TABLE wholegenomesequencing (
-	isolate_id int4 NOT NULL REFERENCES isolates(id),
-	sequencing_id int4 NOT NULL REFERENCES sequencing(id),
-	CONSTRAINT wholegenomesequencing_pkey PRIMARY KEY (isolate_id, sequencing_id)
-);
-
 CREATE TABLE public_repository_information (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	sequencing_id int4 REFERENCES sequencing(id),
@@ -54,22 +72,6 @@ CREATE TABLE public_repository_information (
 	sra_accession text,
 	genbank_accession text,
 	attribute_package int4 REFERENCES attribute_packages(ontology_term_id)
-);
-
-CREATE TABLE extraction_information (
-	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	sequencing_id int4 REFERENCES sequencing(id),
-	experimental_protocol_field text,
-	experimental_specimen_role_type int4 REFERENCES experimental_specimen_role_types(ontology_term_id),
-	nucleic_acid_extraction_method text,
-	nucleic_acid_extraction_kit text,
-	sample_volume_measurement_value float8,
-	sample_volume_measurement_unit int4 REFERENCES volume_measurement_units(ontology_term_id),
-	residual_sample_status int4 REFERENCES residual_sample_status(ontology_term_id),
-	sample_storage_duration_value float8,
-	sample_storage_duration_unit int4 REFERENCES duration_units(ontology_term_id),
-	nucleic_acid_storage_duration_value float8,
-	nucleic_acid_storage_duration_unit int4 REFERENCES duration_units(ontology_term_id)
 );
 
 CREATE TABLE read_mapping_software_names (
