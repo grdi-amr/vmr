@@ -1,18 +1,16 @@
-CREATE TABLE ast_lab_test (
+CREATE TABLE am_susceptibility_tests(
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	isolate_id int4 NOT NULL REFERENCES isolates(id),
 	amr_testing_by int4 REFERENCES agencies(ontology_term_id), 
-	laboratory_name text, 
-	contact_name text,
-	contact_email text
+	testing_date date,
+	contact_information int4 REFERENCES contact_information(id)
 );
 
 CREATE TABLE amr_antibiotics_profile (
 	id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	ast_lab_test_id int4 NOT NULL REFERENCES ast_lab_test(id),
-	isolate_id int4 NOT NULL REFERENCES isolates(id),
+	test_id int4 NOT NULL REFERENCES am_susceptibility_tests(id),
 	antimicrobial_agent int4 REFERENCES antimicrobial_agents(ontology_term_id),
 	antimicrobial_phenotype int4 REFERENCES antimicrobial_phenotypes(ontology_term_id),
-	testing_date date,
 	measurement float4,
 	measurement_units int4 REFERENCES measurement_units(ontology_term_id),
 	measurement_sign int4 REFERENCES measurement_sign(ontology_term_id),
