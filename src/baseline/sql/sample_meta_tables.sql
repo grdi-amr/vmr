@@ -5,7 +5,8 @@ CREATE TABLE contact_information (
 	laboratory_name text,
 	contact_name text,
 	contact_email text,
-	note text
+	note text, 
+	UNIQUE NULLS NOT DISTINCT (laboratory_name, contact_name, contact_email)
 );
 
 -- Collection information
