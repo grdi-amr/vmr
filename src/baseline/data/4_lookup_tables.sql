@@ -975,11 +975,15 @@ COPY public.food_packaging (ontology_term_id, curated) FROM stdin;
 \.
 
 
-COPY public.prevalence_metrics (ontology_term_id, curated) FROM stdin;
-\.
-
-
 COPY public.stage_of_production (ontology_term_id, curated) FROM stdin;
+7	t
+8	t
+9	t
+10	t
+11	t
+369	t
+396	t
+419	t
 \.
 
 
