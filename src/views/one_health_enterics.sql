@@ -1,5 +1,90 @@
 CREATE SCHEMA IF NOT EXISTS ohe;
 
+CREATE OR REPLACE VIEW ohe.country_state 
+AS 
+SELECT g.sample_id,
+       concat_ws(':', c.en_term, states.en_term) AS geo_loc_name
+FROM geo_loc AS g
+LEFT JOIN countries as c
+ON g.country = c.id
+LEFT JOIN state_province_regions as states
+ON g.state_province_region = states.id;
+
+CREATE OR REPLACE VIEW ohe.host_organism 
+AS 
+   SELECT h.sample_id, 
+          org.ontology_id,
+          org.scientific_name, 
+          org.en_common_name
+     FROM hosts as h 
+LEFT JOIN host_organisms as org
+       ON h.host_organism = org.id;
+
+CREATE OR REPLACE VIEW ohe.isolation_source
+AS
+  SELECT sample_id, 
+         string_agg(terms, '; ') AS isolation_source
+    FROM 
+         (SELECT   sample_id, 
+                   bind_ontology(org.scientific_name, org.ontology_id) AS terms
+              FROM samples 
+         LEFT JOIN ohe.host_organism as org
+                ON samples.id = org.sample_id
+             UNION
+            SELECT sample_id, 
+                   terms 
+              FROM environmental_site_agg
+             UNION
+            SELECT sample_id, 
+                   terms 
+              FROM anatomical_material_agg
+             UNION
+            SELECT sample_id, 
+                   terms 
+              FROM body_product_agg
+             UNION
+            SELECT sample_id, 
+                   terms 
+              FROM anatomical_part_agg
+             UNION 
+            SELECT sample_id, 
+                   terms 
+              FROM food_product_agg
+             UNION 
+            SELECT sample_id, 
+                   terms 
+              FROM food_product_properties_agg)
+   WHERE terms NOT LIKE 'Not %'
+GROUP BY sample_id;
+
+
+CREATE VIEW ohe.host  
+AS 
+SELECT org.sample_id,
+       CASE WHEN org.ontology_id IS NOT NULL THEN bind_ontology(org.en_common_name, org.ontology_id)
+       ELSE bind_ontology(fd_prod.en_term, fd_prod.ontology_id)
+       END AS host
+FROM ohe.host_organism AS org
+LEFT JOIN hosts AS h
+ON org.sample_id = h.sample_id
+LEFT JOIN ontology_terms AS fd_prod
+ON h.host_food_production_name = fd_prod.id ;
+
+
+DROP VIEW IF EXISTS ohe.source_type;
+CREATE VIEW ohe.source_type 
+AS
+SELECT h.sample_id,
+       CASE WHEN h.scientific_name = 'Homo sapiens' THEN 'Human'
+            WHEN f.terms IS NOT NULL THEN 'Food'
+            WHEN scientific_name != 'Homo sapiens' THEN 'Animal'
+            ELSE 'Environmental' 
+       END AS source_type
+FROM ohe.host_organism AS h
+LEFT JOIN food_product_agg AS f
+       ON h.sample_id = f.sample_id
+      AND f.terms NOT LIKE 'Not %';
+
 
 DROP VIEW IF EXISTS ohe.sample_identifiers;
 CREATE VIEW ohe.sample_identifiers
@@ -14,12 +99,11 @@ LEFT JOIN samples AS s
 LEFT JOIN wgs 
        ON wgs.isolate_id = i.id 
 LEFT JOIN public_repository_information AS p
-       ON wgs.id = p.sequencing_id
+       ON wgs.sequencing_id = p.sequencing_id
 LEFT JOIN strains 
        ON i.id = strains.id
 LEFT JOIN alt_iso_wide 
-       ON alt_iso_wide.isolate_id = i.id
-;
+       ON alt_iso_wide.isolate_id = i.id ;
 
 
 DROP VIEW IF EXISTS ohe.collection_information;
@@ -62,8 +146,7 @@ LEFT JOIN ontology_terms AS seqed_by
 LEFT JOIN ohe.source_type AS src_type 
        ON s.id = src_type.sample_id
 LEFT JOIN ontology_terms AS col_device 
-       ON c.collection_device = col_device.id
-;
+       ON c.collection_device = col_device.id;
 
 
 DROP VIEW IF EXISTS ohe.host_data;
@@ -96,96 +179,7 @@ LEFT JOIN anatomical_material_agg AS ana_mat
 LEFT JOIN body_product_agg AS body_prod
        ON s.id = body_prod.sample_id
 LEFT JOIN host_breeds AS breeds 
-       ON h.host_breed = breeds.id
-;
-SELECT * FROM ohe.host_data LIMIT 3;
+       ON h.host_breed = breeds.id;
 
 
-CREATE OR REPLACE VIEW ohe.country_state 
-AS 
-SELECT g.sample_id,
-       concat_ws(':', c.en_term, states.en_term) AS geo_lomultiple columns postgresc_name
-FROM geo_loc AS g
-LEFT JOIN countries as c
-ON g.country = c.id
-LEFT JOIN state_province_regions as states
-ON g.state_province_region = states.id
-;
-
-CREATE OR REPLACE VIEW ohe.isolation_source
-AS
-  SELECT sample_id, 
-         string_agg(terms, '; ') AS isolation_source
-    FROM 
-         (SELECT   sample_id, 
-                   bind_ontology(org.scientific_name, org.ontology_id) AS terms
-              FROM samples 
-         LEFT JOIN ohe.host_organism as org
-                ON samples.id = org.sample_id
-             UNION
-            SELECT sample_id, 
-                   terms 
-              FROM environmental_site_agg
-             UNION
-            SELECT sample_id, 
-                   terms 
-              FROM anatomical_material_agg
-             UNION
-            SELECT sample_id, 
-                   terms 
-              FROM body_product_agg
-             UNION
-            SELECT sample_id, 
-                   terms 
-              FROM anatomical_part_agg
-             UNION 
-            SELECT sample_id, 
-                   terms 
-              FROM food_product_agg
-             UNION 
-            SELECT sample_id, 
-                   terms 
-              FROM food_product_properties_agg)
-   WHERE terms NOT LIKE 'Not %'
-GROUP BY sample_id
-;
-
-CREATE OR REPLACE VIEW ohe.host_organism 
-AS 
-   SELECT h.sample_id, 
-          org.ontology_id,
-          org.scientific_name, 
-          org.en_common_name
-     FROM hosts as h 
-LEFT JOIN host_organisms as org
-       ON h.host_organism = org.id;
-
-
-DROP VIEW IF EXISTS ohe.source_type;
-CREATE VIEW ohe.source_type 
-AS
-SELECT h.sample_id,
-       CASE WHEN h.scientific_name = 'Homo sapiens' THEN 'Human'
-            WHEN f.terms IS NOT NULL THEN 'Food'
-            WHEN scientific_name != 'Homo sapiens' THEN 'Animal'
-            ELSE 'Environmental' 
-       END AS source_type
-FROM ohe.host_organism AS h
-LEFT JOIN food_product_agg AS f
-       ON h.sample_id = f.sample_id
-      AND f.terms NOT LIKE 'Not %'
-;
-
-CREATE VIEW ohe.host  
-AS 
-SELECT org.sample_id,
-       CASE WHEN org.ontology_id IS NOT NULL THEN bind_ontology(org.en_common_name, org.ontology_id)
-       ELSE bind_ontology(fd_prod.en_term, fd_prod.ontology_id)
-       END AS host
-FROM ohe.host_organism AS org
-LEFT JOIN hosts AS h
-ON org.sample_id = h.sample_id
-LEFT JOIN ontology_terms AS fd_prod
-ON h.host_food_production_name = fd_prod.id
-;
 
