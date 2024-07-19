@@ -25,7 +25,7 @@ CREATE TABLE isolates (
 CREATE TABLE alternative_isolate_ids (
 	isolate_id int4 NOT NULL REFERENCES isolates(id),
 	alternative_isolate_id text UNIQUE NOT NULL,
-	note text NULL,
+	note text NULL
 );
 
 -- Risk Assesment 
