@@ -23,7 +23,7 @@ CREATE TABLE metagenomic_extractions (
 
 CREATE TABLE wgs_extractions (
 	isolate_id int4 NOT NULL REFERENCES isolates(id),
-  extraction_id int4 NOT NULL REFERENCES extractions(id),
+	extraction_id int4 NOT NULL REFERENCES extractions(id),
 	CONSTRAINT wgs_extractions_pkey PRIMARY KEY (isolate_id, extraction_id)
 );
 
