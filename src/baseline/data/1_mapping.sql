@@ -1,7 +1,7 @@
 
 COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, is_lookup, is_multi_choice) FROM stdin;
 1	Antimicrobial resistance	AMR_testing_by	am_susceptibility_tests	amr_testing_by	t	f
-2	Antimicrobial resistance	AMR_testing_by_contact_email	am_susceptibility_tests	contact_information
+2	Antimicrobial resistance	AMR_testing_by_contact_email	am_susceptibility_tests	contact_information	f	f
 3	Antimicrobial resistance	AMR_testing_by_contact_name	am_susceptibility_tests	contact_information	f	f
 4	Antimicrobial resistance	AMR_testing_by_laboratory_name	am_susceptibility_tests	contact_information	f	f	
 5	Antimicrobial resistance	AMR_testing_date	amr_antibiotics_profile	testing_date	f	f
