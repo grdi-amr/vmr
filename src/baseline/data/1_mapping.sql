@@ -3,7 +3,7 @@ COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, 
 1	Antimicrobial resistance	AMR_testing_by	am_susceptibility_tests	amr_testing_by	t	f
 2	Antimicrobial resistance	AMR_testing_by_contact_email	am_susceptibility_tests	contact_information	f	f
 3	Antimicrobial resistance	AMR_testing_by_contact_name	am_susceptibility_tests	contact_information	f	f
-4	Antimicrobial resistance	AMR_testing_by_laboratory_name	am_susceptibility_tests	contact_information	f	f	
+4	Antimicrobial resistance	AMR_testing_by_laboratory_name	am_susceptibility_tests	contact_information	f	f
 5	Antimicrobial resistance	AMR_testing_date	amr_antibiotics_profile	testing_date	f	f
 6	Antimicrobial resistance	antimicrobial_agent_name	amr_antibiotics_profile	antimicrobial_agent	t	f
 7	Antimicrobial resistance	antimicrobial_intermediate_breakpoint	amr_antibiotics_profile	testing_intermediate_breakpoint	f	f
