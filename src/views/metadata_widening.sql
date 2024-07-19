@@ -108,6 +108,80 @@ LEFT JOIN ontology_terms AS o
        ON risk_activity.term_id = o.id 
  GROUP BY sample_id;
 
+CREATE OR REPLACE VIEW hosts_wide
+       AS
+   SELECT h.id AS host_id,
+          h.sample_id AS sample_id,
+          h.host_ecotype,
+          bind_ontology(ho.en_common_name, ho.ontology_id) AS host_common_name,
+          bind_ontology(ho.scientific_name, ho.ontology_id) AS host_scientific_name,
+          h.host_breed,
+          bind_ontology(prod_name.en_term, prod_name.ontology_id) AS host_food_production_name,
+          h.host_disease,
+          bind_ontology(age.en_term, age.ontology_id) AS host_age_bin,
+          bind_ontology(c.en_term, c.ontology_id) AS host_origin_geo_loc_name_country
+     FROM hosts AS h 
+LEFT JOIN host_organisms AS ho
+       ON h.host_organism = ho.id
+LEFT JOIN ontology_terms AS age
+       ON h.host_age_bin = age.id 
+LEFT JOIN ontology_terms AS prod_name
+       ON h.host_food_production_name = prod_name.id 
+LEFT JOIN countries AS c
+       ON h.host_origin_geo_loc_name_country = c.id;
+
+CREATE OR REPLACE VIEW anatomical_data_wide
+       AS
+   SELECT a.id AS anatomical_data_id,
+          a.sample_id AS sample_id, 
+          bind_ontology(region.en_term, region.ontology_id) AS anatomical_region
+     FROM anatomical_data AS a
+LEFT JOIN ontology_terms as region
+       ON a.anatomical_region = region.id;
+
+CREATE OR REPLACE VIEW wgs
+       AS
+   SELECT wgs.isolate_id,
+          ext.id AS extraction_id,
+          seq.id AS sequencing_id,
+          ext.experimental_protocol_field,
+          ext.experimental_specimen_role_type,
+          ext.nucleic_acid_extraction_method,
+          ext.nucleic_acid_extraction_kit,
+          ext.sample_volume_measurement_value,
+          ext.sample_volume_measurement_unit,
+          ext.residual_sample_status,
+          ext.sample_storage_duration_value,
+          ext.sample_storage_duration_unit,
+          ext.nucleic_acid_storage_duration_value,
+          ext.nucleic_acid_storage_duration_unit,
+          seq.contact_information,
+          seq.sequenced_by,
+          seq.sequencing_project_name,
+          seq.sequencing_platform,
+          seq.sequencing_instrument,
+          seq.sequencing_assay_type,
+          seq.dna_fragment_length,
+          seq.genomic_target_enrichment_method,
+          seq.genomic_target_enrichment_method_details,
+          seq.amplicon_pcr_primer_scheme,
+          seq.amplicon_size,
+          seq.sequencing_flow_cell_version,
+          seq.library_preparation_kit,
+          seq.sequencing_protocol,
+          seq.irida_isolate_id,
+          seq.irida_project_id,
+          seq.r1_fastq_filename,
+          seq.r2_fastq_filename,
+          seq.fast5_filename,
+          seq.assembly_filename
+     FROM wgs_extractions AS wgs
+LEFT JOIN extractions AS ext
+       ON wgs.extraction_id = ext.id 
+LEFT JOIN sequencing AS seq
+       ON ext.id = seq.extraction_id;
+
+/* 
 CREATE OR REPLACE VIEW full_sample_metadata 
        AS
    SELECT s.id,
@@ -177,50 +251,5 @@ LEFT JOIN anatomical_data AS a
        ON s.id = a.sample_id
 LEFT JOIN food_data AS f
        ON s.id = f.sample_id;
+*/
 
-CREATE OR REPLACE VIEW hosts_wide
-       AS
-   SELECT h.id AS host_id,
-          h.sample_id AS sample_id,
-          h.host_ecotype,
-          bind_ontology(ho.en_common_name, ho.ontology_id) AS host_common_name,
-          bind_ontology(ho.scientific_name, ho.ontology_id) AS host_scientific_name,
-          h.host_breed,
-          bind_ontology(prod_name.en_term, prod_name.ontology_id) AS host_food_production_name,
-          h.host_disease,
-          bind_ontology(age.en_term, age.ontology_id) AS host_age_bin,
-          bind_ontology(c.en_term, c.ontology_id) AS host_origin_geo_loc_name_country
-     FROM hosts AS h 
-LEFT JOIN host_organisms AS ho
-       ON h.host_organism = ho.id
-LEFT JOIN ontology_terms AS age
-       ON h.host_age_bin = age.id 
-LEFT JOIN ontology_terms AS prod_name
-       ON h.host_food_production_name = prod_name.id 
-LEFT JOIN countries AS c
-       ON h.host_origin_geo_loc_name_country = c.id;
-
-CREATE OR REPLACE VIEW anatomical_data_wide
-       AS
-   SELECT a.id AS anatomical_data_id,
-          a.sample_id AS sample_id, 
-          bind_ontology(region.en_term, region.ontology_id) AS anatomical_region,
-          bind_ontology(body_prod.en_term, body_prod.ontology_id) AS body_product,
-          bind_ontology(part.en_term, part.ontology_id) AS anatomical_part, 
-          bind_ontology(material.en_term, material.ontology_id) AS anatomical_material
-     FROM anatomical_data AS a
-LEFT JOIN ontology_terms as region
-       ON a.anatomical_region = region.id
-LEFT JOIN ontology_terms as body_prod
-       ON a.body_product = body_prod.id
-LEFT JOIN ontology_terms as part
-       ON a.anatomical_part = part.id
-LEFT JOIN ontology_terms as material
-       ON a.anatomical_material = material.id;
-
-CREATE OR REPLACE VIEW wgs
-       AS
-   SELECT * 
-     FROM sequencing AS seq
-LEFT JOIN wholegenomesequencing AS wgs
-       ON seq.id = wgs.sequencing_id;
