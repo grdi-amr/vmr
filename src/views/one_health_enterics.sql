@@ -1,7 +1,6 @@
+DROP SCHEMA IF EXISTS ohe CASCADE;
 CREATE SCHEMA IF NOT EXISTS ohe;
 
-
-DROP VIEW IF EXISTS ohe.sample_identifiers;
 CREATE VIEW ohe.sample_identifiers
 AS 
    SELECT i.isolate_id AS sample_name,
@@ -22,7 +21,6 @@ LEFT JOIN alt_iso_wide
 ;
 
 
-DROP VIEW IF EXISTS ohe.collection_information;
 CREATE VIEW ohe.collection_information
 AS
    SELECT s.id AS sample_id,
@@ -65,8 +63,6 @@ LEFT JOIN ontology_terms AS col_device
        ON c.collection_device = col_device.id
 ;
 
-
-DROP VIEW IF EXISTS ohe.host_data;
 CREATE VIEW ohe.host_data
 AS 
    SELECT s.id AS sample_id,
@@ -77,7 +73,10 @@ AS
           ana_mat.terms AS host_tissue_sampled, 
           body_prod.terms AS host_body_product, 
           h.host_ecotype AS host_variety, 
-          breeds.host_breed AS host_animal_breed
+          breeds.host_breed AS host_animal_breed, 
+          risk.terms AS upstream_intervention, 
+          host_am.host_am,
+          housing.host_housing
      FROM isolates AS i
 LEFT JOIN samples AS s 
        ON i.sample_id = s.id
@@ -97,14 +96,29 @@ LEFT JOIN body_product_agg AS body_prod
        ON s.id = body_prod.sample_id
 LEFT JOIN host_breeds AS breeds 
        ON h.host_breed = breeds.id
+LEFT JOIN risk_activity_agg AS risk
+       ON s.id = risk.sample_id
+LEFT JOIN ohe.host_am as host_am
+       ON s.id = host_am.sample_id
+LEFT JOIN ohe.host_housing as housing 
+       ON s.id = housing.sample_id
 ;
-SELECT * FROM ohe.host_data LIMIT 3;
 
+CREATE VIEW ohe.food 
 
-CREATE OR REPLACE VIEW ohe.country_state 
+   SELECT s.id AS sample_id
+     FROM isolates AS i
+LEFT JOIN samples AS s
+       ON s.id = i.sample_id
+LEFT JOIN food_data AS f
+       ON s.id = f.sample_id
+LIMIT 2
+;
+
+CREATE VIEW ohe.country_state 
 AS 
 SELECT g.sample_id,
-       concat_ws(':', c.en_term, states.en_term) AS geo_lomultiple columns postgresc_name
+       concat_ws(':', c.en_term, states.en_term) AS geo_loc
 FROM geo_loc AS g
 LEFT JOIN countries as c
 ON g.country = c.id
@@ -112,7 +126,7 @@ LEFT JOIN state_province_regions as states
 ON g.state_province_region = states.id
 ;
 
-CREATE OR REPLACE VIEW ohe.isolation_source
+CREATE VIEW ohe.isolation_source
 AS
   SELECT sample_id, 
          string_agg(terms, '; ') AS isolation_source
@@ -150,7 +164,7 @@ AS
 GROUP BY sample_id
 ;
 
-CREATE OR REPLACE VIEW ohe.host_organism 
+CREATE VIEW ohe.hostpostgres IN from colum_organism 
 AS 
    SELECT h.sample_id, 
           org.ontology_id,
@@ -161,7 +175,6 @@ LEFT JOIN host_organisms as org
        ON h.host_organism = org.id;
 
 
-DROP VIEW IF EXISTS ohe.source_type;
 CREATE VIEW ohe.source_type 
 AS
 SELECT h.sample_id,
@@ -189,3 +202,43 @@ LEFT JOIN ontology_terms AS fd_prod
 ON h.host_food_production_name = fd_prod.id
 ;
 
+
+CREATE VIEW ohe.host_am 
+AS 
+SELECT c.sample_id, 
+       CASE WHEN sa.term_id = (SELECT id FROM ontology_terms WHERE ontology_id = 'GENEPIO:0100537') 
+         THEN c.presampling_activity_details 
+       ELSE NULL
+       END as host_am
+FROM sample_activity AS sa
+LEFT JOIN collection_information AS c
+      ON sa.id = c.id
+;
+
+
+CREATE VIEW ohe.host_housing
+SELECT 
+   ed.sample_id,
+   string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS host_housing
+FROM environmental_data_site AS e
+LEFT JOIN environmental_data as ed
+       ON e.id = ed.id
+LEFT JOIN ontology_terms AS o
+ON e.term_id = o.id
+WHERE o.ontology_id IN (
+   'ENVO:01000922', --Animal Cage
+   'ENVO:00002196', --Aquarium
+   'ENVO:00000073', --Building 
+   'ENVO:03501257', --Barn
+   'ENVO:03501383', --Breeder Barn
+   'ENVO:03501385', --Sheep Barn
+   'ENVO:03501413', --Pigsty
+   'ENVO:03501387', --Animal pen
+   'EOL:0001903', -- Stall 
+   'ENVO:01001874', -- Poultry hatchery 
+   'ENVO:03501439', --Roost (Bird)
+   'ENVO:03501372', -- Crate
+   'ENVO:03501386' -- Broiler Barn
+)
+GROUP BY ed.sample_id
+;
