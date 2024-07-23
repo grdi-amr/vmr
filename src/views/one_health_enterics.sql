@@ -105,15 +105,34 @@ LEFT JOIN ohe.host_housing as housing
 ;
 
 CREATE VIEW ohe.food 
-
-   SELECT s.id AS sample_id
+AS
+   SELECT s.id AS sample_id,
+          countries.en_term AS food_origin,
+          source.terms AS food_source, 
+          proc.food_processing_method, 
+          proc.food_preserv_proc, 
+          bind_ontology(prod_str.en_term, prod_str.ontology_id) AS food_prod, 
+          product.terms AS food_product_type, 
+          packaging.terms AS food_contain_wrap, 
+          f.food_quality_date
      FROM isolates AS i
 LEFT JOIN samples AS s
        ON s.id = i.sample_id
 LEFT JOIN food_data AS f
        ON s.id = f.sample_id
-LIMIT 2
-;
+LEFT JOIN countries 
+       ON f.food_product_origin_country = countries.id 
+LEFT JOIN animal_source_of_food_agg as source
+       ON s.id = source.sample_id
+LEFT JOIN ohe.food_process_and_preserve as proc
+       ON s.id = proc.sample_id
+LEFT JOIN ontology_terms AS prod_str 
+       ON f.food_product_production_stream = prod_str.id
+LEFT JOIN food_product_agg AS product 
+       ON s.id = product.sample_id
+LEFT JOIN food_packaging_agg AS packaging 
+       ON s.id = packaging.sample_id
+LIMIT 2;
 
 CREATE VIEW ohe.country_state 
 AS 
@@ -142,7 +161,7 @@ AS
               FROM environmental_site_agg
              UNION
             SELECT sample_id, 
-                   terms 
+                   terms View with custom data sql
               FROM anatomical_material_agg
              UNION
             SELECT sample_id, 
@@ -213,7 +232,7 @@ SELECT c.sample_id,
 FROM sample_activity AS sa
 LEFT JOIN collection_information AS c
       ON sa.id = c.id
-;
+;delimiter
 
 
 CREATE VIEW ohe.host_housing
@@ -242,3 +261,76 @@ WHERE o.ontology_id IN (
 )
 GROUP BY ed.sample_id
 ;
+
+
+CREATE VIEW ohe.food_process_and_preserve
+AS
+  SELECT food_data.sample_id AS sample_id, 
+         string_agg(
+              (CASE WHEN o.ontology_id NOT IN ('FOODON:03510128', -- Organic food claim or use
+                                               'FOODON:00002418', -- Food (canned)
+                                               'FOODON:03307539', -- Food (dried)
+                                               'FOODON:03302148')  -- Food (frozen)
+                         THEN bind_ontology(o.en_term, o.ontology_id)
+                    ELSE NULL 
+               END), '; ') AS food_processing_method, 
+         string_agg(
+              (CASE WHEN o.ontology_id IN ('FOODON:00002418', --Food (canned)
+                                           'FOODON:03307539', --Food (dried)
+                                           'FOODON:03302148') -- Food (frozen)
+                         THEN bind_ontology(o.en_term, o.ontology_id)
+                    ELSE NULL 
+               END), '; ') AS food_preserv_proc
+    FROM food_data_product_property as prop
+         LEFT JOIN food_data
+                ON prop.id = food_data.id
+         LEFT JOIN ontology_terms AS o 
+                ON prop.term_id = o.id
+GROUP BY sample_id;
+
+
+CREATE VIEW ohe.facility_type
+AS
+SELECT env_data.sample_id, 
+       string_agg(
+            (CASE WHEN o.ontology_id IN ('ENVO:01000925', -- Abatoir
+                                        'ENVO:00003862', -- Dairy
+                                        'ENVO:01001448', -- Retail Environment 
+                                        'ENVO:00002221', -- Shop
+                                        'ENVO:03501396', -- Butcher Shop
+                                        'ENVO:01000984', -- Supermarket
+                                        'ENVO:0350142')  -- Manure digester facility
+                     THEN bind_ontology(o.en_term, o.ontology_id)
+                 ELSE NULL 
+            END), '; ') AS facility_type
+FROM environmental_data as env_data
+
+
+
+
+WITH sites AS (
+   SELECT e.id, 
+          ontology_id, 
+          en_term 
+     FROM environmental_data_site as e
+          LEFT JOIN ontology_terms AS o
+                 ON e.term_id = o.id),
+     materials AS
+  (SELECT e.id, 
+          ontology_id, 
+          en_term 
+     FROM environmental_data_material AS e
+          LEFT JOIN ontology_terms AS o
+                 ON e.term_id = o.id)
+SELECT * 
+FROM environmental_data as env
+LEFT JOIN sites ON env.id = sites.id
+LEFT JOIN materials ON env.id = materials.id
+LIMIT 10;
+
+   
+
+
+
+
+
