@@ -86,6 +86,17 @@ LEFT JOIN ontology_terms AS o
        ON pro.term_id = o.id
  GROUP BY sample_id;
 
+CREATE OR REPLACE VIEW food_packaging_agg
+       AS
+   SELECT f.sample_id AS sample_id,
+	  string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS terms 
+     FROM food_data AS f
+LEFT JOIN food_data_packaging AS pack
+       ON f.id = pack.id
+LEFT JOIN ontology_terms AS o
+       ON pack.term_id = o.id
+ GROUP BY sample_id;
+
 CREATE OR REPLACE VIEW sample_purposes_agg
 AS 
    SELECT ci.sample_id,
