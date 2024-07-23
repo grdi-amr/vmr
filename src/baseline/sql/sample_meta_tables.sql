@@ -53,8 +53,8 @@ CREATE TABLE geo_loc (
 	country int4 REFERENCES countries(id),
 	state_province_region int4 REFERENCES state_province_regions(id),
 	site int4 REFERENCES geo_loc_name_sites(id),
-	latitude point,
-	longitude point
+	latitude decimal(8,6),
+	longitude decimal(9,6)
 );
 
 -- Food Data 
