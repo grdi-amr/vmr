@@ -225,14 +225,12 @@ ON h.host_food_production_name = fd_prod.id
 CREATE VIEW ohe.host_am 
 AS 
 SELECT c.sample_id, 
-       CASE WHEN sa.term_id = (SELECT id FROM ontology_terms WHERE ontology_id = 'GENEPIO:0100537') 
-         THEN c.presampling_activity_details 
-       ELSE NULL
-       END as host_am
+       c.presampling_activity_details AS host_am
 FROM sample_activity AS sa
 LEFT JOIN collection_information AS c
       ON sa.id = c.id
-;delimiter
+WHERE sa.term_id = (SELECT id FROM ontology_terms WHERE ontology_id = 'GENEPIO:0100537')
+;
 
 
 CREATE VIEW ohe.host_housing
@@ -286,51 +284,127 @@ AS
                 ON prop.id = food_data.id
          LEFT JOIN ontology_terms AS o 
                 ON prop.term_id = o.id
-GROUP BY sample_id;
+GROUP BY sample_id limit 3;
 
 
 CREATE VIEW ohe.facility_type
 AS
-SELECT env_data.sample_id, 
+                                        
+CREATE view ohe.fac_type_and_local_scale
+AS
+SELECT env.sample_id,
        string_agg(
-            (CASE WHEN o.ontology_id IN ('ENVO:01000925', -- Abatoir
-                                        'ENVO:00003862', -- Dairy
-                                        'ENVO:01001448', -- Retail Environment 
-                                        'ENVO:00002221', -- Shop
-                                        'ENVO:03501396', -- Butcher Shop
-                                        'ENVO:01000984', -- Supermarket
-                                        'ENVO:0350142')  -- Manure digester facility
-                     THEN bind_ontology(o.en_term, o.ontology_id)
-                 ELSE NULL 
-            END), '; ') AS facility_type
-FROM environmental_data as env_data
+            (CASE WHEN o.ontology_id IN ('ENVO:01000925', -- Abattoir
+                                         'ENVO:00003862', -- Dairy
+                                         'ENVO:01001448', -- Retail Environment 
+                                         'ENVO:00002221', -- Shop
+                                         'ENVO:03501396', -- Butcher Shop
+                                         'ENVO:01000984', -- Supermarket
+                                         'ENVO:0350142')  -- Manure digester facility
+                       THEN bind_ontology(o.en_term, o.ontology_id)
+            ELSE NULL 
+            END), '; ') AS facility_type, 
+       string_agg(
+            (CASE WHEN o.ontology_id IN ('ENVO:00000114', --Agricultural Field
+                                         'ENVO:00000314', --Alluvial fan
+                                         'ENVO:03501406', --Artificial wetland
+                                         'ENVO:03501441', --Breeding ground
+                                         'ENVO:03501405', --Creek
+                                         'ENVO:00000078', --Farm
+                                         'ENVO:03501443', --Beef farm
+                                         'ENVO:03501384', --Breeder farm
+                                         'ENVO:03501416', --Dairy farm
+                                         'ENVO:01000627', --Feedlot
+                                         'ENVO:03501444', --Beef cattle feedlot
+                                         'ENVO:00000294', --Fish farm
+                                         'ENVO:03501417', --Research farm
+                                         'ENVO:01000306', --Freshwater environment
+                                         'ENVO:01001873', --Hatchery
+                                         'ENVO:01001874', --Poultry hatchery
+                                         'ENVO:00000020', --Lake
+                                         'ENVO:03501423', --Manure lagoon (Anaerobic lagoon)
+                                         'ENVO:01001872', --Manure pit
+                                         'ENVO:01000320', --Marine environment
+                                         'ENVO:03501440', --Benthic zone
+                                         'ENVO:00000208', --Pelagic zone
+                                         'ENVO:00000562', --Park
+                                         'ENVO:00000033', --Pond
+                                         'ENVO:00000025', --Reservoir
+                                         'ENVO:00000450', --Irrigation reservoir
+                                         'ENVO:00000022', --River
+                                         'ENVO:03501439', --Roost (bird)
+                                         'ENVO:01000772', --Rural area
+                                         'ENVO:03501438', --Slough
+                                         'ENVO:00000023', --Stream
+                                         'ENVO:00000495', --Tributary
+                                         'ENVO:01001191', --Water surface
+                                         'ENVO:00000109') --Woodland area
+                       THEN bind_ontology(o.en_term, o.ontology_id)
+            ELSE NULL 
+            END), '; ') AS env_local_scale
+  FROM environmental_data as env
+       LEFT JOIN environmental_data_site AS e
+              ON env.id = e.id 
+       LEFT JOIN ontology_terms as o 
+              ON e.term_id = o.id 
+GROUP BY env.sample_id;
+
+CREATE VIEW ohe.geo_feat_and_medium 
+AS
+WITH vals (ont) AS (
+   VALUES
+      ('AGRO:00000671'), --Animal transportation equipment 
+      ('GENEPIO:0100896'), --Dead haul trailer 
+      ('AGRO:00000673'), --Dead haul truck 
+      ('GENEPIO:0100897'), --Live haul trailer 
+      ('AGRO:00000674'), --Live haul truck 
+      ('ENVO:03501379'), --Bulk tank 
+      ('AGRO:00000675'), --Animal feeding equipment 
+      ('AGRO:00000679'), --Animal feeder 
+      ('AGRO:00000680'), --Animal drinker 
+      ('AGRO:00000676'), --Feed pan 
+      ('AGRO:00000677'), --Watering bowl 
+      ('NCIT:C49844'), --Belt 
+      ('GSSO:012935'), --Boot 
+      ('OBI:0002806'), --Boot cover 
+      ('ENVO:03501431'), --Broom 
+      ('ENVO:03501379'), --Bulk tank 
+      ('AGRO:00000678'), --Chick box 
+      ('AGRO:00000672'), --Chick pad 
+      ('ENVO:03501430'), --Cleaning equipment 
+      ('ENVO:03501400'), --Dumpster 
+      ('AGRO:00000670'), --Egg belt 
+      ('NCIT:C49947'), --Fan 
+      ('ENVO:03501415'), --Freezer 
+      ('ENVO:03501414'), --Freezer handle 
+      ('AGRO:00000669')--Plucking belt 
+)
+SELECT env.sample_id,
+      string_agg( 
+         (CASE WHEN o.ontology_id IN (SELECT ont FROM vals)
+                    THEN bind_ontology(o.en_term, o.ontology_id)
+               ELSE NULL 
+            END), '; ') AS coll_site_geo_feat,
+      string_agg( 
+         (CASE WHEN o.ontology_id NOT IN (SELECT ont FROM vals)
+                    THEN bind_ontology(o.en_term, o.ontology_id)
+               ELSE NULL 
+            END), '; ') AS medium
+  FROM environmental_data as env
+       LEFT JOIN environmental_data_material AS e
+              ON env.id = e.id 
+       LEFT JOIN ontology_terms as o 
+              ON e.term_id = o.id 
+GROUP BY env.sample_id;
 
 
-
-
-WITH sites AS (
-   SELECT e.id, 
-          ontology_id, 
-          en_term 
-     FROM environmental_data_site as e
-          LEFT JOIN ontology_terms AS o
-                 ON e.term_id = o.id),
-     materials AS
-  (SELECT e.id, 
-          ontology_id, 
-          en_term 
-     FROM environmental_data_material AS e
-          LEFT JOIN ontology_terms AS o
-                 ON e.term_id = o.id)
-SELECT * 
-FROM environmental_data as env
-LEFT JOIN sites ON env.id = sites.id
-LEFT JOIN materials ON env.id = materials.id
-LIMIT 10;
-
-   
-
-
-
+CREATE VIEW ohe.fertilizer_admin 
+AS
+SELECT c.sample_id,
+       c.presampling_activity_details AS fertilizer_admin
+   FROM sample_activity as sa
+   LEFT JOIN collection_information AS c
+          ON c.id = sa.id
+WHERE sa.term_id = (SELECT id FROM ontology_terms WHERE ontology_id = 'GENEPIO:0100543');
 
 
