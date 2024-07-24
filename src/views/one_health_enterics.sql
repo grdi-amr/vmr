@@ -29,6 +29,7 @@ AS
           c.sample_collection_date AS collection_date,
           i.isolation_date AS cult_isol_date,
           country.geo_loc_name, 
+          source.isolation_source,
           src_type.source_type,
           bind_ontology(col_device.en_term, col_device.ontology_id) AS samp_collect_device,
           sp.terms AS purpose_of_sampling,
@@ -61,6 +62,8 @@ LEFT JOIN ohe.source_type AS src_type
        ON s.id = src_type.sample_id
 LEFT JOIN ontology_terms AS col_device 
        ON c.collection_device = col_device.id
+LEFT JOIN ohe.isolation_source as source 
+       ON s.id = source.sample_id 
 ;
 
 CREATE VIEW ohe.host_data
@@ -131,8 +134,7 @@ LEFT JOIN ontology_terms AS prod_str
 LEFT JOIN food_product_agg AS product 
        ON s.id = product.sample_id
 LEFT JOIN food_packaging_agg AS packaging 
-       ON s.id = packaging.sample_id
-LIMIT 2;
+       ON s.id = packaging.sample_id;
 
 CREATE VIEW ohe.country_state 
 AS 
@@ -142,8 +144,7 @@ FROM geo_loc AS g
 LEFT JOIN countries as c
 ON g.country = c.id
 LEFT JOIN state_province_regions as states
-ON g.state_province_region = states.id
-;
+ON g.state_province_region = states.id;
 
 CREATE VIEW ohe.isolation_source
 AS
@@ -161,7 +162,7 @@ AS
               FROM environmental_site_agg
              UNION
             SELECT sample_id, 
-                   terms View with custom data sql
+                   terms 
               FROM anatomical_material_agg
              UNION
             SELECT sample_id, 
@@ -180,10 +181,9 @@ AS
                    terms 
               FROM food_product_properties_agg)
    WHERE terms NOT LIKE 'Not %'
-GROUP BY sample_id
-;
+GROUP BY sample_id;
 
-CREATE VIEW ohe.hostpostgres IN from colum_organism 
+CREATE VIEW ohe.host
 AS 
    SELECT h.sample_id, 
           org.ontology_id,
