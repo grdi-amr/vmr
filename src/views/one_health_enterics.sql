@@ -17,8 +17,73 @@ LEFT JOIN public_repository_information AS p
 LEFT JOIN strains 
        ON i.id = strains.id
 LEFT JOIN alt_iso_wide 
-       ON alt_iso_wide.isolate_id = i.id
+       ON alt_iso_wide.isolate_id = i.id;
+
+
+CREATE VIEW ohe.country_state 
+AS 
+SELECT g.sample_id,
+       concat_ws(':', c.en_term, states.en_term) AS geo_loc
+FROM geo_loc AS g
+LEFT JOIN countries as c
+ON g.country = c.id
+LEFT JOIN state_province_regions as states
+ON g.state_province_region = states.id;
+
+
+CREATE VIEW ohe.source_type 
+AS
+SELECT h.sample_id,
+       CASE WHEN h.scientific_name = 'Homo sapiens' THEN 'Human'
+            WHEN f.terms IS NOT NULL THEN 'Food'
+            WHEN scientific_name != 'Homo sapiens' THEN 'Animal'
+            ELSE 'Environmental' 
+       END AS source_type
+FROM ohe.host_organism AS h
+LEFT JOIN food_product_agg AS f
+       ON h.sample_id = f.sample_id
+      AND f.terms NOT LIKE 'Not %'
 ;
+
+
+CREATE VIEW ohe.isolation_source
+AS
+  SELECT sample_id, 
+         string_agg(terms, '; ') AS isolation_source
+    FROM 
+         (SELECT   sample_id, 
+                   bind_ontology(org.scientific_name, org.ontology_id) AS terms
+              FROM samples 
+         LEFT JOIN ohe.host_organism as org
+                ON samples.id = org.sample_id
+             UNION
+            SELECT sample_id, 
+                   terms 
+              FROM environmental_site_agg
+             UNION
+            SELECT sample_id, 
+                   terms 
+              FROM anatomical_material_agg
+             UNION
+            SELECT sample_id, 
+                   terms 
+              FROM body_product_agg
+             UNION
+            SELECT sample_id, 
+                   terms 
+              FROM anatomical_part_agg
+             UNION 
+            SELECT sample_id, 
+                   terms 
+
+              FROM food_product_agg
+             UNION 
+            SELECT sample_id, 
+                   terms 
+              FROM food_product_properties_agg)
+   WHERE terms NOT LIKE 'Not %'
+GROUP BY sample_id;
+
 
 CREATE VIEW ohe.collection_information
 AS
@@ -65,6 +130,69 @@ LEFT JOIN ohe.isolation_source as source
        ON s.id = source.sample_id 
 ;
 
+
+CREATE VIEW ohe.host_organism
+AS 
+SELECT h.sample_id, 
+       org.ontology_id,
+       org.scientific_name, 
+       org.en_common_name
+  FROM hosts AS h 
+       LEFT JOIN host_organisms as org
+       ON h.host_organism = org.id;
+
+CREATE VIEW ohe.host  
+AS 
+SELECT org.sample_id,
+       CASE WHEN org.ontology_id IS NOT NULL THEN bind_ontology(org.en_common_name, org.ontology_id)
+       ELSE bind_ontology(fd_prod.en_term, fd_prod.ontology_id)
+       END AS host
+FROM ohe.host_organism AS org
+LEFT JOIN hosts AS h
+ON org.sample_id = h.sample_id
+LEFT JOIN ontology_terms AS fd_prod
+ON h.host_food_production_name = fd_prod.id
+;
+
+
+CREATE VIEW ohe.host_am 
+AS 
+SELECT c.sample_id, 
+       c.presampling_activity_details AS host_am
+FROM sample_activity AS sa
+LEFT JOIN collection_information AS c
+      ON sa.id = c.id
+WHERE sa.term_id = (SELECT id FROM ontology_terms WHERE ontology_id = 'GENEPIO:0100537')
+;
+
+
+CREATE VIEW ohe.host_housing
+SELECT 
+   ed.sample_id,
+   string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS host_housing
+FROM environmental_data_site AS e
+LEFT JOIN environmental_data as ed
+       ON e.id = ed.id
+LEFT JOIN ontology_terms AS o
+ON e.term_id = o.id
+WHERE o.ontology_id IN (
+   'ENVO:01000922', --Animal Cage
+   'ENVO:00002196', --Aquarium
+   'ENVO:00000073', --Building 
+   'ENVO:03501257', --Barn
+   'ENVO:03501383', --Breeder Barn
+   'ENVO:03501385', --Sheep Barn
+   'ENVO:03501413', --Pigsty
+   'ENVO:03501387', --Animal pen
+   'EOL:0001903', -- Stall 
+   'ENVO:01001874', -- Poultry hatchery 
+   'ENVO:03501439', --Roost (Bird)
+   'ENVO:03501372', -- Crate
+   'ENVO:03501386' -- Broiler Barn
+)
+GROUP BY ed.sample_id;
+
+
 CREATE VIEW ohe.host_data
 AS 
    SELECT s.id AS sample_id,
@@ -106,6 +234,33 @@ LEFT JOIN ohe.host_housing as housing
        ON s.id = housing.sample_id
 ;
 
+
+CREATE VIEW ohe.food_process_and_preserve
+AS
+  SELECT food_data.sample_id AS sample_id, 
+         string_agg(
+              (CASE WHEN o.ontology_id NOT IN ('FOODON:03510128', -- Organic food claim or use
+                                               'FOODON:00002418', -- Food (canned)
+                                               'FOODON:03307539', -- Food (dried)
+                                               'FOODON:03302148')  -- Food (frozen)
+                         THEN bind_ontology(o.en_term, o.ontology_id)
+                    ELSE NULL 
+               END), '; ') AS food_processing_method, 
+         string_agg(
+              (CASE WHEN o.ontology_id IN ('FOODON:00002418', --Food (canned)
+                                           'FOODON:03307539', --Food (dried)
+                                           'FOODON:03302148') -- Food (frozen)
+                         THEN bind_ontology(o.en_term, o.ontology_id)
+                    ELSE NULL 
+               END), '; ') AS food_preserv_proc
+    FROM food_data_product_property as prop
+         LEFT JOIN food_data
+                ON prop.id = food_data.id
+         LEFT JOIN ontology_terms AS o 
+                ON prop.term_id = o.id
+GROUP BY sample_id;
+
+
 CREATE VIEW ohe.food 
 AS
    SELECT s.id AS sample_id,
@@ -136,160 +291,6 @@ LEFT JOIN food_packaging_agg AS packaging
        ON s.id = packaging.sample_id;
 
 
-CREATE VIEW ohe.country_state 
-AS 
-SELECT g.sample_id,
-       concat_ws(':', c.en_term, states.en_term) AS geo_loc
-FROM geo_loc AS g
-LEFT JOIN countries as c
-ON g.country = c.id
-LEFT JOIN state_province_regions as states
-ON g.state_province_region = states.id;
-
-CREATE VIEW ohe.isolation_source
-AS
-  SELECT sample_id, 
-         string_agg(terms, '; ') AS isolation_source
-    FROM 
-         (SELECT   sample_id, 
-                   bind_ontology(org.scientific_name, org.ontology_id) AS terms
-              FROM samples 
-         LEFT JOIN ohe.host_organism as org
-                ON samples.id = org.sample_id
-             UNION
-            SELECT sample_id, 
-                   terms 
-              FROM environmental_site_agg
-             UNION
-            SELECT sample_id, 
-                   terms 
-              FROM anatomical_material_agg
-             UNION
-            SELECT sample_id, 
-                   terms 
-              FROM body_product_agg
-             UNION
-            SELECT sample_id, 
-                   terms 
-              FROM anatomical_part_agg
-             UNION 
-            SELECT sample_id, 
-                   terms 
-
-              FROM food_product_agg
-             UNION 
-            SELECT sample_id, 
-                   terms 
-              FROM food_product_properties_agg)
-   WHERE terms NOT LIKE 'Not %'
-GROUP BY sample_id;
-
-CREATE VIEW ohe.host
-AS 
-   SELECT h.sample_id, 
-          org.ontology_id,
-          org.scientific_name, 
-          org.en_common_name
-     FROM hosts as h 
-LEFT JOIN host_organisms as org
-       ON h.host_organism = org.id;
-
-
-
-CREATE VIEW ohe.source_type 
-AS
-SELECT h.sample_id,
-       CASE WHEN h.scientific_name = 'Homo sapiens' THEN 'Human'
-            WHEN f.terms IS NOT NULL THEN 'Food'
-            WHEN scientific_name != 'Homo sapiens' THEN 'Animal'
-            ELSE 'Environmental' 
-       END AS source_type
-FROM ohe.host_organism AS h
-LEFT JOIN food_product_agg AS f
-       ON h.sample_id = f.sample_id
-      AND f.terms NOT LIKE 'Not %'
-;
-
-CREATE VIEW ohe.host  
-AS 
-SELECT org.sample_id,
-
-       CASE WHEN org.ontology_id IS NOT NULL THEN bind_ontology(org.en_common_name, org.ontology_id)
-       ELSE bind_ontology(fd_prod.en_term, fd_prod.ontology_id)
-       END AS host
-FROM ohe.host_organism AS org
-LEFT JOIN hosts AS h
-ON org.sample_id = h.sample_id
-LEFT JOIN ontology_terms AS fd_prod
-ON h.host_food_production_name = fd_prod.id
-;
-
-
-CREATE VIEW ohe.host_am 
-AS 
-SELECT c.sample_id, 
-       c.presampling_activity_details AS host_am
-FROM sample_activity AS sa
-LEFT JOIN collection_information AS c
-      ON sa.id = c.id
-
-WHERE sa.term_id = (SELECT id FROM ontology_terms WHERE ontology_id = 'GENEPIO:0100537')
-;
-
-
-CREATE VIEW ohe.host_housing
-SELECT 
-   ed.sample_id,
-   string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS host_housing
-FROM environmental_data_site AS e
-LEFT JOIN environmental_data as ed
-       ON e.id = ed.id
-LEFT JOIN ontology_terms AS o
-ON e.term_id = o.id
-WHERE o.ontology_id IN (
-   'ENVO:01000922', --Animal Cage
-   'ENVO:00002196', --Aquarium
-   'ENVO:00000073', --Building 
-   'ENVO:03501257', --Barn
-   'ENVO:03501383', --Breeder Barn
-   'ENVO:03501385', --Sheep Barn
-   'ENVO:03501413', --Pigsty
-   'ENVO:03501387', --Animal pen
-   'EOL:0001903', -- Stall 
-   'ENVO:01001874', -- Poultry hatchery 
-   'ENVO:03501439', --Roost (Bird)
-   'ENVO:03501372', -- Crate
-   'ENVO:03501386' -- Broiler Barn
-)
-GROUP BY ed.sample_id
-;
-
-
-CREATE VIEW ohe.food_process_and_preserve
-AS
-  SELECT food_data.sample_id AS sample_id, 
-         string_agg(
-              (CASE WHEN o.ontology_id NOT IN ('FOODON:03510128', -- Organic food claim or use
-                                               'FOODON:00002418', -- Food (canned)
-                                               'FOODON:03307539', -- Food (dried)
-                                               'FOODON:03302148')  -- Food (frozen)
-                         THEN bind_ontology(o.en_term, o.ontology_id)
-                    ELSE NULL 
-               END), '; ') AS food_processing_method, 
-         string_agg(
-              (CASE WHEN o.ontology_id IN ('FOODON:00002418', --Food (canned)
-                                           'FOODON:03307539', --Food (dried)
-                                           'FOODON:03302148') -- Food (frozen)
-                         THEN bind_ontology(o.en_term, o.ontology_id)
-                    ELSE NULL 
-               END), '; ') AS food_preserv_proc
-    FROM food_data_product_property as prop
-         LEFT JOIN food_data
-                ON prop.id = food_data.id
-         LEFT JOIN ontology_terms AS o 
-                ON prop.term_id = o.id
-GROUP BY sample_id;
-                                        
 CREATE view ohe.fac_type_and_local_scale
 AS
 SELECT env.sample_id,
@@ -349,6 +350,7 @@ SELECT env.sample_id,
               ON e.term_id = o.id 
 GROUP BY env.sample_id;
 
+
 CREATE VIEW ohe.geo_feat_and_medium 
 AS
 WITH vals (ont) AS (
@@ -397,6 +399,7 @@ SELECT env.sample_id,
               ON e.term_id = o.id 
 GROUP BY env.sample_id;
 
+
 CREATE VIEW ohe.fertilizer_admin 
 AS
 SELECT c.sample_id,
@@ -405,6 +408,7 @@ SELECT c.sample_id,
    LEFT JOIN collection_information AS c
           ON c.id = sa.id
 WHERE sa.term_id = (SELECT id FROM ontology_terms WHERE ontology_id = 'GENEPIO:0100543');
+
 
 CREATE VIEW ohe.environmental_fields
 AS 
