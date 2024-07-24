@@ -20,7 +20,6 @@ LEFT JOIN alt_iso_wide
        ON alt_iso_wide.isolate_id = i.id
 ;
 
-
 CREATE VIEW ohe.collection_information
 AS
    SELECT s.id AS sample_id,
@@ -136,6 +135,7 @@ LEFT JOIN food_product_agg AS product
 LEFT JOIN food_packaging_agg AS packaging 
        ON s.id = packaging.sample_id;
 
+
 CREATE VIEW ohe.country_state 
 AS 
 SELECT g.sample_id,
@@ -175,6 +175,7 @@ AS
              UNION 
             SELECT sample_id, 
                    terms 
+
               FROM food_product_agg
              UNION 
             SELECT sample_id, 
@@ -194,6 +195,7 @@ LEFT JOIN host_organisms as org
        ON h.host_organism = org.id;
 
 
+
 CREATE VIEW ohe.source_type 
 AS
 SELECT h.sample_id,
@@ -211,6 +213,7 @@ LEFT JOIN food_product_agg AS f
 CREATE VIEW ohe.host  
 AS 
 SELECT org.sample_id,
+
        CASE WHEN org.ontology_id IS NOT NULL THEN bind_ontology(org.en_common_name, org.ontology_id)
        ELSE bind_ontology(fd_prod.en_term, fd_prod.ontology_id)
        END AS host
@@ -229,6 +232,7 @@ SELECT c.sample_id,
 FROM sample_activity AS sa
 LEFT JOIN collection_information AS c
       ON sa.id = c.id
+
 WHERE sa.term_id = (SELECT id FROM ontology_terms WHERE ontology_id = 'GENEPIO:0100537')
 ;
 
@@ -284,11 +288,7 @@ AS
                 ON prop.id = food_data.id
          LEFT JOIN ontology_terms AS o 
                 ON prop.term_id = o.id
-GROUP BY sample_id limit 3;
-
-
-CREATE VIEW ohe.facility_type
-AS
+GROUP BY sample_id;
                                         
 CREATE view ohe.fac_type_and_local_scale
 AS
@@ -389,14 +389,13 @@ SELECT env.sample_id,
          (CASE WHEN o.ontology_id NOT IN (SELECT ont FROM vals)
                     THEN bind_ontology(o.en_term, o.ontology_id)
                ELSE NULL 
-            END), '; ') AS medium
+            END), '; ') AS env_medium
   FROM environmental_data as env
        LEFT JOIN environmental_data_material AS e
               ON env.id = e.id 
        LEFT JOIN ontology_terms as o 
               ON e.term_id = o.id 
 GROUP BY env.sample_id;
-
 
 CREATE VIEW ohe.fertilizer_admin 
 AS
@@ -407,4 +406,17 @@ SELECT c.sample_id,
           ON c.id = sa.id
 WHERE sa.term_id = (SELECT id FROM ontology_terms WHERE ontology_id = 'GENEPIO:0100543');
 
-
+CREATE VIEW ohe.environmental_fields
+AS 
+SELECT s.id AS sample_id,
+       fac.facility_type, 
+       feat.coll_site_geo_feat,
+       fac.env_local_scale,
+       feat.env_medium
+FROM samples AS s
+LEFT JOIN ohe.fac_type_and_local_scale AS fac 
+       ON s.id = fac.sample_id 
+LEFT JOIN ohe.geo_feat_and_medium AS feat
+       ON s.id = feat.sample_id
+LEFT JOIN ohe.fertilizer_admin AS fert
+       ON s.id = fert.sample_id;
