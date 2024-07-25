@@ -1,3 +1,10 @@
+CREATE OR REPLACE VIEW wgs
+       AS
+   SELECT * 
+     FROM sequencing AS seq
+LEFT JOIN wgs_extractions AS wgs
+       ON seq.id = wgs.sequencing_id;
+
 CREATE OR REPLACE VIEW animal_source_of_food_agg 
        AS
    SELECT fd.sample_id AS sample_id,
@@ -93,7 +100,10 @@ CREATE OR REPLACE VIEW food_packaging_agg
      FROM food_data AS f
 LEFT JOIN food_data_packaging AS pack
        ON f.id = pack.id
-LEFT JOIN ontology_terms AS o
+LEFT JOIN ontology_termsSELECT 'DROP VIEW ' || table_name || ';'
+  FROM information_schema.views
+ WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
+   AND table_name !~ '^pg_'; AS o
        ON pack.term_id = o.id
  GROUP BY sample_id;
 
@@ -211,23 +221,8 @@ CREATE OR REPLACE VIEW anatomical_data_wide
        AS
    SELECT a.id AS anatomical_data_id,
           a.sample_id AS sample_id, 
-          bind_ontology(region.en_term, region.ontology_id) AS anatomical_region,
-          bind_ontology(body_prod.en_term, body_prod.ontology_id) AS body_product,
-          bind_ontology(part.en_term, part.ontology_id) AS anatomical_part, 
-          bind_ontology(material.en_term, material.ontology_id) AS anatomical_material
+          bind_ontology(region.en_term, region.ontology_id) AS anatomical_region
      FROM anatomical_data AS a
 LEFT JOIN ontology_terms as region
-       ON a.anatomical_region = region.id
-LEFT JOIN ontology_terms as body_prod
-       ON a.body_product = body_prod.id
-LEFT JOIN ontology_terms as part
-       ON a.anatomical_part = part.id
-LEFT JOIN ontology_terms as material
-       ON a.anatomical_material = material.id;
+       ON a.anatomical_region = region.id;
 
-CREATE OR REPLACE VIEW wgs
-       AS
-   SELECT * 
-     FROM sequencing AS seq
-LEFT JOIN wholegenomesequencing AS wgs
-       ON seq.id = wgs.sequencing_id;
