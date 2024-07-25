@@ -1,9 +1,10 @@
 DROP SCHEMA IF EXISTS ohe CASCADE;
 CREATE SCHEMA IF NOT EXISTS ohe;
 
-CREATE VIEW ohe.sample_identifiers
+CREATE VIEW ohe.sample_identification_fields
 AS 
-SELECT i.isolate_id AS sample_name,
+SELECT s.id AS sample_id,
+       i.isolate_id AS sample_name,
        p.bioproject_accession,
        COALESCE(strains.strain, i.isolate_id) AS strain,
        alt_iso_wide.alt_isolate_names AS isolate_name_alias
@@ -13,7 +14,7 @@ SELECT i.isolate_id AS sample_name,
        LEFT JOIN wgs 
               ON wgs.isolate_id = i.id 
        LEFT JOIN public_repository_information AS p
-              ON wgs.id = p.sequencing_id
+              ON wgs.sequencing_id = p.sequencing_id
        LEFT JOIN strains 
               ON i.id = strains.id
        LEFT JOIN alt_iso_wide 
@@ -23,7 +24,7 @@ SELECT i.isolate_id AS sample_name,
 CREATE VIEW ohe.country_state 
 AS 
 SELECT g.sample_id,
-       concat_ws(':', c.en_term, states.en_term) AS geo_loc
+       concat_ws(':', c.en_term, states.en_term) AS geo_loc_name
   FROM geo_loc AS g
        LEFT JOIN countries as c
               ON g.country = c.id
@@ -94,7 +95,7 @@ AS
 GROUP BY sample_id;
 
 
-CREATE VIEW ohe.collection_information
+CREATE VIEW ohe.collection_information_fields
 AS
 SELECT s.id AS sample_id,
        microbes.scientific_name AS organism, 
@@ -183,11 +184,11 @@ AS
                            'ENVO:01001874', -- Poultry hatchery 
                            'ENVO:03501439', --Roost (Bird)
                            'ENVO:03501372', -- Crate
-                           'ENVO:03501386' -- Broiler Barn)
+                           'ENVO:03501386')-- Broiler Barn)
 GROUP BY ed.sample_id;
 
 
-CREATE VIEW ohe.host_data
+CREATE VIEW ohe.host_fields
 AS 
 SELECT s.id AS sample_id,
        host_col.host AS host, 
@@ -254,7 +255,7 @@ AS
 GROUP BY sample_id;
 
 
-CREATE VIEW ohe.food 
+CREATE VIEW ohe.food_fields
 AS
 SELECT s.id AS sample_id,
        countries.en_term AS food_origin,
@@ -417,3 +418,52 @@ FROM samples AS s
             ON s.id = feat.sample_id
      LEFT JOIN ohe.fertilizer_admin AS fert
             ON s.id = fert.sample_id;
+
+CREATE VIEW ohe.one_health_enterics_export
+AS
+SELECT s.sample_name,
+       s.bioproject_accession, 
+       s.strain, 
+       s.isolate_name_alias,
+       c.organism,
+       c.collected_by,
+       c.collection_date,
+       c.cult_isol_date,
+       c.geo_loc_name,
+       c.isolation_source,
+       c.source_type,
+       c.samp_collect_device,
+       c.purpose_of_sampling,
+       c.project_name,
+       c.lat_lon,
+       c.serovar,
+       c.sequenced_by,
+       h.host,
+       h.host_age,
+       h.host_disease,
+       h.environmental_site,
+       h.host_tissue_sampled,
+       h.host_body_product,
+       h.host_variety,
+       h.host_animal_breed,
+       h.upstream_intervention,
+       h.host_am,
+       h.host_housing,
+       f.food_origin,
+       f.food_source,
+       f.food_processing_method,
+       f.food_preserv_proc,
+       f.food_prod,
+       f.food_product_type,
+       f.food_contain_wrap,
+       f.food_quality_date,
+       e.facility_type,
+       e.coll_site_geo_feat,
+       e.env_local_scale,
+       e.env_medium         
+  FROM ohe.sample_identification_fields AS s
+       LEFT JOIN ohe.collection_information_fields AS c ON s.sample_id = c.sample_id
+       LEFT JOIN ohe.host_fields AS h ON s.sample_id = h.sample_id 
+       LEFT JOIN ohe.food_fields AS f ON s.sample_id = f.sample_id
+       LEFT JOIN ohe.environmental_fields AS e ON s.sample_id = e.sample_id;
+
