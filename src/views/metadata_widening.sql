@@ -86,6 +86,17 @@ LEFT JOIN ontology_terms AS o
        ON pro.term_id = o.id
  GROUP BY sample_id;
 
+CREATE OR REPLACE VIEW food_packaging_agg
+       AS
+   SELECT f.sample_id AS sample_id,
+	  string_agg(bind_ontology(o.en_term, o.ontology_id), '; ') AS terms 
+     FROM food_data AS f
+LEFT JOIN food_data_packaging AS pack
+       ON f.id = pack.id
+LEFT JOIN ontology_terms AS o
+       ON pack.term_id = o.id
+ GROUP BY sample_id;
+
 CREATE OR REPLACE VIEW sample_purposes_agg
 AS 
    SELECT ci.sample_id,
@@ -181,13 +192,12 @@ LEFT JOIN extractions AS ext
 LEFT JOIN sequencing AS seq
        ON ext.id = seq.extraction_id;
 
-/* 
 CREATE OR REPLACE VIEW full_sample_metadata 
        AS
    SELECT s.id,
           s.sample_collector_sample_id,
           p.sample_plan_id,
-          p.sample_plan_names, 
+          p.sample_plan_name, 
           p.project_name,
           c.id AS collection_information_id,
           c.sample_collected_by,
@@ -205,7 +215,7 @@ CREATE OR REPLACE VIEW full_sample_metadata
           ci.laboratory_name AS sample_collected_by_laboratory_name, 
           ci.contact_name AS sample_collector_contact_name, 
           ci.contact_email AS sample_collector_contact_email,
-          g.country AS geo_loc_country
+          g.country AS geo_loc_country,
           g.state_province_region AS geo_loc_name_state_province_region,
           site.geo_loc_name_site AS geo_loc_name_site,
           g.latitude AS geo_loc_latitude,
@@ -215,18 +225,14 @@ CREATE OR REPLACE VIEW full_sample_metadata
           e.sediment_depth,
           e.water_depth,
           e.water_temperature,
-          h.host_common_name,
+          h.host_organism,
           h.host_origin_geo_loc_name_country,
           h.host_age_bin,
           h.host_disease,
           h.host_food_production_name,
           h.host_breed,
           h.host_ecotype,
-          h.host_scientific_name,
           a.anatomical_region,
-          a.body_product,
-          a.anatomical_part,
-          a.anatomical_material,
           f.id AS food_data_id,
           f.food_product_production_stream,
           f.food_product_origin_country,
@@ -251,5 +257,26 @@ LEFT JOIN anatomical_data AS a
        ON s.id = a.sample_id
 LEFT JOIN food_data AS f
        ON s.id = f.sample_id;
-*/
+
+CREATE OR REPLACE VIEW hosts_wide
+       AS
+   SELECT h.id AS host_id,
+          h.sample_id AS sample_id,
+          h.host_ecotype,
+          bind_ontology(ho.en_common_name, ho.ontology_id) AS host_common_name,
+          bind_ontology(ho.scientific_name, ho.ontology_id) AS host_scientific_name,
+          h.host_breed,
+          bind_ontology(prod_name.en_term, prod_name.ontology_id) AS host_food_production_name,
+          h.host_disease,
+          bind_ontology(age.en_term, age.ontology_id) AS host_age_bin,
+          bind_ontology(c.en_term, c.ontology_id) AS host_origin_geo_loc_name_country
+     FROM hosts AS h 
+LEFT JOIN host_organisms AS ho
+       ON h.host_organism = ho.id
+LEFT JOIN ontology_terms AS age
+       ON h.host_age_bin = age.id 
+LEFT JOIN ontology_terms AS prod_name
+       ON h.host_food_production_name = prod_name.id 
+LEFT JOIN countries AS c
+       ON h.host_origin_geo_loc_name_country = c.id;
 
