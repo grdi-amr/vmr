@@ -1,25 +1,47 @@
 DROP SCHEMA IF EXISTS ohe CASCADE;
 CREATE SCHEMA IF NOT EXISTS ohe;
 
+CREATE VIEW ohe.wgs_by_isolate
+AS 
+  WITH wgs_w_project AS (
+       SELECT i.id as isolate_id, 
+              wgs.sequencing_id,
+              CASE WHEN wgs.sequenced_by IS NOT NULL THEN bind_ontology(seq_by.en_term, seq_by.ontology_id) 
+               END AS sequenced_by,
+              p.bioproject_accession
+         FROM isolates AS i
+              LEFT JOIN wgs 
+                     ON wgs.isolate_id = i.id 
+              LEFT JOIN public_repository_information AS p
+                     ON wgs.sequencing_id = p.sequencing_id
+              LEFT JOIN ontology_terms AS seq_by 
+                     ON wgs.sequenced_by = seq_by.id)
+  SELECT isolate_id,
+         string_agg(case when seqnum_acc = 1 then bioproject_accession end, '; ') AS bioproject_accession,
+         string_agg(case when seqnum_sby = 1 then sequenced_by end, '; ')         AS sequenced_by
+    FROM (SELECT wgs_w_project.*, 
+                 row_number() OVER (PARTITION BY isolate_id, bioproject_accession) AS seqnum_acc,
+                 row_number() OVER (PARTITION BY isolate_id, sequenced_by)         AS seqnum_sby
+          FROM wgs_w_project) 
+GROUP BY isolate_id;
+
 CREATE VIEW ohe.sample_identification_fields
 AS 
-SELECT s.id AS sample_id,
+SELECT i.id AS isolate_id,
        i.isolate_id AS sample_name,
-       p.bioproject_accession,
+       s.id AS sample_id,
+       seq.bioproject_accession,
        COALESCE(strains.strain, i.isolate_id) AS strain,
        alt_iso_wide.alt_isolate_names AS isolate_name_alias
   FROM isolates AS i
        LEFT JOIN samples AS s 
               ON i.sample_id = s.id
-       LEFT JOIN wgs 
-              ON wgs.isolate_id = i.id 
-       LEFT JOIN public_repository_information AS p
-              ON wgs.sequencing_id = p.sequencing_id
+       LEFT JOIN ohe.wgs_by_isolate as seq
+              ON i.id = seq.isolate_id
        LEFT JOIN strains 
               ON i.id = strains.id
        LEFT JOIN alt_iso_wide 
               ON alt_iso_wide.isolate_id = i.id;
-
 
 CREATE VIEW ohe.country_state 
 AS 
@@ -97,7 +119,8 @@ GROUP BY sample_id;
 
 CREATE VIEW ohe.collection_information_fields
 AS
-SELECT s.id AS sample_id,
+SELECT i.id AS isolate_id,
+       s.id AS sample_id,
        microbes.scientific_name AS organism, 
        bind_ontology(agencies.en_term, agencies.ontology_id) AS collected_by, 
        c.sample_collection_date AS collection_date,
@@ -110,7 +133,7 @@ SELECT s.id AS sample_id,
        projects.project_name,
        concat_ws(' | ', latitude, longitude) AS lat_lon, 
        i.serovar, 
-       bind_ontology(seqed_by.en_term, seqed_by.ontology_id) AS sequenced_by
+       seq.sequenced_by
   FROM isolates AS i
        LEFT JOIN samples AS s 
               ON i.sample_id = s.id
@@ -128,10 +151,8 @@ SELECT s.id AS sample_id,
               ON s.id = geo_loc.sample_id
        LEFT JOIN sample_purposes_agg AS sp 
               ON s.id = sp.sample_id
-       LEFT JOIN wgs
-              ON wgs.isolate_id = i.id 
-       LEFT JOIN ontology_terms AS seqed_by 
-              ON wgs.sequenced_by = seqed_by.id
+       LEFT JOIN ohe.wgs_by_isolate AS seq
+              ON i.id = seq.isolate_id
        LEFT JOIN ohe.source_type AS src_type 
               ON s.id = src_type.sample_id
        LEFT JOIN ontology_terms AS col_device 
@@ -190,7 +211,8 @@ GROUP BY ed.sample_id;
 
 CREATE VIEW ohe.host_fields
 AS 
-SELECT s.id AS sample_id,
+SELECT i.id AS isolate_id,
+       s.id AS sample_id,
        host_col.host AS host, 
        bind_ontology(age_ont.en_term, age_ont.ontology_id) AS host_age,
        host_diseases.host_disease, 
@@ -257,7 +279,8 @@ GROUP BY sample_id;
 
 CREATE VIEW ohe.food_fields
 AS
-SELECT s.id AS sample_id,
+SELECT i.id AS isolate_id,
+       s.id AS sample_id,
        countries.en_term AS food_origin,
        source.terms AS food_source, 
        proc.food_processing_method, 
@@ -406,18 +429,21 @@ SELECT c.sample_id,
 
 CREATE VIEW ohe.environmental_fields
 AS 
-SELECT s.id AS sample_id,
+SELECT i.id AS isolate_id,
+       s.id AS sample_id,
        fac.facility_type, 
        feat.coll_site_geo_feat,
        fac.env_local_scale,
        feat.env_medium
-FROM samples AS s
-     LEFT JOIN ohe.fac_type_and_local_scale AS fac 
-            ON s.id = fac.sample_id 
-     LEFT JOIN ohe.geo_feat_and_medium AS feat
-            ON s.id = feat.sample_id
-     LEFT JOIN ohe.fertilizer_admin AS fert
-            ON s.id = fert.sample_id;
+  FROM isolates AS i
+       LEFT JOIN samples AS s
+              ON i.sample_id = s.id
+       LEFT JOIN ohe.fac_type_and_local_scale AS fac 
+              ON s.id = fac.sample_id 
+       LEFT JOIN ohe.geo_feat_and_medium AS feat
+              ON s.id = feat.sample_id
+       LEFT JOIN ohe.fertilizer_admin AS fert
+              ON s.id = fert.sample_id;
 
 CREATE VIEW ohe.one_health_enterics_export
 AS
@@ -462,8 +488,8 @@ SELECT s.sample_name,
        e.env_local_scale,
        e.env_medium         
   FROM ohe.sample_identification_fields AS s
-       LEFT JOIN ohe.collection_information_fields AS c ON s.sample_id = c.sample_id
-       LEFT JOIN ohe.host_fields AS h ON s.sample_id = h.sample_id 
-       LEFT JOIN ohe.food_fields AS f ON s.sample_id = f.sample_id
-       LEFT JOIN ohe.environmental_fields AS e ON s.sample_id = e.sample_id;
+       LEFT JOIN ohe.collection_information_fields AS c ON s.isolate_id = c.isolate_id
+       LEFT JOIN ohe.host_fields AS h ON s.isolate_id = h.isolate_id 
+       LEFT JOIN ohe.food_fields AS f ON s.isolate_id = f.isolate_id
+       LEFT JOIN ohe.environmental_fields AS e ON s.isolate_id = e.isolate_id;
 
