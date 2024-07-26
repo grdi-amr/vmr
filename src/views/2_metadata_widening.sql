@@ -155,6 +155,7 @@ CREATE OR REPLACE VIEW wgs
    SELECT wgs.isolate_id,
           ext.id AS extraction_id,
           seq.id AS sequencing_id,
+          seq.library_id,
           ext.experimental_protocol_field,
           ext.experimental_specimen_role_type,
           ext.nucleic_acid_extraction_method,
