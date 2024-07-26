@@ -15,7 +15,7 @@ JOIN information_schema.key_column_usage AS kcu
 JOIN information_schema.constraint_column_usage AS ccu
     ON ccu.constraint_name = tc.constraint_name
 WHERE tc.constraint_type = 'FOREIGN KEY'
-    AND tc.table_schema='public'
+    AND tc.table_schema='public';
 
 CREATE VIEW possible_isolate_names
 AS
