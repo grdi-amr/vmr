@@ -31,7 +31,7 @@ done
 # Functions 
 psql --dbname $DB --file functions/functions.sql
 # Views 
-for f in views/
+for f in views/*
 do
 	psql --dbname $DB --file "$f"
 done
