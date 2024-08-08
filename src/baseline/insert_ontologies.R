@@ -1,6 +1,11 @@
 library(tidyverse)
 library(DBI)
 library(grdiamR)
+load_all("~/Projects/grdiamR/")
+
+template_file <- "~/Software/GRDI_AMR_One_Health/Template/GRDI_Harmonization-Template_v12.2.2.xlsm"
+
+excel_vals <- excel_lookup_values(template_file = template_file)
 
 populate_lookup_table <- function(con, lookup_table, terms){
   message("Table: ", lookup_table)
@@ -15,7 +20,7 @@ populate_lookup_table <- function(con, lookup_table, terms){
 
 vmr <-
   dbConnect(drv = RPostgres::Postgres(),
-            dbname = "remake",
+            dbname = "vmr_testing",
             user = "emil")
 
 map <- dbReadTable(vmr, "template_mapping") %>% as_tibble()
@@ -23,25 +28,22 @@ fk <- dbReadTable(vmr, "foreign_keys") %>% as_tibble()
 
 # Check that all grdi columns are in the method
 sheet <-
-  openxlsx::read.xlsx("~/Software/GRDI_AMR_One_Health/Template/GRDI_Harmonization-Template_v11.1.1.xlsm",
-                    sheet = 2,
-                    startRow = 2,
-                    sep.names = " ",
-                    )
-fields <- colnames(sheet)[1:176]
-fields[!fields %in% map$grdi_field]
+  openxlsx::read.xlsx(template_file,
+                      sheet = 2,
+                      startRow = 2,
+                      sep.names = " ")
+excel_fields <- colnames(sheet)
+xcel_no_amr <- excel_fields[!grepl(x=excel_fields, paste(grdiamR::amr_regexes(), collapse = "|"))]
+
+missing_fields_in_vmr <- xcel_no_amr[!xcel_no_amr %in% map$grdi_field]
 
 
-
-q <- dbSendQuery(vmr, "SELECT * FROM information_schema.columns")
-all_vmr_cols <- dbFetch(q) %>% as_tibble()
+all_vmr_cols <- dbGetQuery(vmr, "SELECT * FROM information_schema.columns")
 map %>% filter(!vmr_table %in% all_vmr_cols$table_name)
 map %>% filter(!vmr_field %in% all_vmr_cols$column_name)
 
-data("excel_lookup_values")
-
 terms <-
-  excel_lookup_values %>%
+  excel_vals %>%
   filter(!is.na(Id)) %>%
   arrange(Field)
 
@@ -54,7 +56,16 @@ countries <-
   distinct() %>%
   arrange(ontology_id) %>%
   filter(!en_term == "Swaziland")
-dbAppendTable(vmr, name = "countries", value = countries)
+
+dbCountries <- dbReadTable(vmr, "countries") %>% as_tibble()
+
+countries_to_add <-
+  countries %>%
+  filter(!ontology_id %in% dbCountries$ontology_id)
+
+if (nrow(countries_to_add)>0){
+  dbAppendTable(vmr, name = "countries", value = countries_to_add)
+}
 
 canada_id <-
   dbSendQuery(vmr, "SELECT id FROM countries WHERE en_term = 'Canada'") %>%
@@ -67,7 +78,16 @@ states <-
   arrange(ontology_id) %>%
   filter(!grepl(x=ontology_id, "GENEPIO")) %>%
   mutate(country_id = canada_id)
-dbAppendTable(vmr, name = "state_province_regions", value = states)
+
+dbStates <- dbReadTable(vmr, "state_province_regions") %>% as_tibble()
+
+states_to_add <-
+  states %>%
+  filter(!ontology_id %in% dbStates$ontology_id)
+
+if (nrow(states_to_add)>0){
+  dbAppendTable(vmr, name = "state_province_regions", value = states_to_add)
+}
 
 # Organisms.
 host_org_names <-
@@ -79,7 +99,17 @@ host_org_names <-
   rename(ontology_id = id,
          scientific_name = host_scientific_name,
          en_common_name = host_common_name)
-dbAppendTable(vmr, name = "host_organisms", value = host_org_names)
+
+dbOrgs <- dbReadTable(vmr, "host_organisms") %>% as_tibble()
+
+host_orgs_to_add <-
+  host_org_names %>%
+  filter(!ontology_id %in% dbOrgs$ontology_id)
+
+if (nrow(host_orgs_to_add)>0){
+  dbAppendTable(vmr, name = "host_organisms", value = host_orgs_to_add)
+}
+
 
 isolate_orgs <-
   terms %>%
@@ -88,8 +118,18 @@ isolate_orgs <-
          scientific_name = Term) %>%
   select(-Field, -version) %>%
   filter(scientific_name != "Streptococcus equinus")
-dbAppendTable(vmr, name = "microbes", value = isolate_orgs)
 
+dbIsoOrgs <- dbReadTable(vmr, name = "microbes") %>% as_tibble()
+
+isos_to_add <-
+  isolate_orgs %>%
+  filter(!ontology_id %in% dbIsoOrgs$ontology_id)
+
+if (nrow(isos_to_add)>0){
+  message("Adding ", nrow(isos_to_add), " terms")
+  message(paste(isos_to_add$scientific_name, collapse = "; "))
+  dbAppendTable(vmr, name = "microbes", value = isos_to_add)
+}
 
 map_to_tables <-
   map %>%
@@ -102,7 +142,6 @@ terms_insert <-
   mutate(Field = sub(x=Field, " menu$", ""))
 x <- terms_insert$Field=="antimicrobial_phenotype"
 terms_insert$Field[x] <- "antimicrobial_resistance_phenotype"
-
 
 tab_fk_to_ont_term <- fk %>% filter(foreign_table_name=='ontology_terms')
 terms_to_ins <-
