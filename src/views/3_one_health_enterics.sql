@@ -1,4 +1,3 @@
-DROP SCHEMA IF EXISTS ohe CASCADE;
 CREATE SCHEMA IF NOT EXISTS ohe;
 
 CREATE VIEW ohe.wgs_by_isolate
@@ -446,7 +445,6 @@ SELECT i.id AS isolate_id,
        LEFT JOIN ohe.fertilizer_admin AS fert
               ON s.id = fert.sample_id;
 
-DROP VIEW ohe.one_health_enterics_export;
 CREATE VIEW ohe.one_health_enterics_export
 AS
 SELECT s.sample_name,
