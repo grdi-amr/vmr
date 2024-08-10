@@ -21,6 +21,8 @@ psql --dbname $DB --file ${dir}/ast.sql
 # bioinformatics schema
 psql --dbname $DB --file ${dir}/bioinformatics.sql
 psql --dbname $DB --file ${dir}/misc.sql
+# versioning 
+psql --dbname $DB --file ${dir}/versioning.sql
 
 # Input data
 for f in baseline/data/*.sql
