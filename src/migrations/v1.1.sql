@@ -208,3 +208,4 @@ UPDATE collection_information AS c
   FROM new_vals
  WHERE c.collection_device = new_vals.id;
 
+COMMIT;
