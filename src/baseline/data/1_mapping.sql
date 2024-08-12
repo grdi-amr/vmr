@@ -40,10 +40,10 @@ COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, 
 38	Bioinformatics and QC metrics	percent Ns across total genome length	user_bioinformatic_analyses	percent_n	f	f
 39	Bioinformatics and QC metrics	percent read contamination	user_bioinformatic_analyses	percent_read_contamination	f	f
 40	Bioinformatics and QC metrics	quality control details	user_bioinformatic_analyses	quality_control_details	f	f
-41	Bioinformatics and QC metrics	quality_control_determination	user_bioinformatic_analyses	quality_control_determination	f	f
+41	Bioinformatics and QC metrics	quality control determination	user_bioinformatic_analyses	quality_control_determination	t	f
 42	Bioinformatics and QC metrics	quality control method name	user_bioinformatic_analyses	quality_control_method_name	f	f
 43	Bioinformatics and QC metrics	quality control method version	user_bioinformatic_analyses	quality_control_method_version	f	f
-44	Bioinformatics and QC metrics	quality_control_issues	user_bioinformatic_analyses	quality_control_issues	t	f
+44	Bioinformatics and QC metrics	quality control issues	user_bioinformatic_analyses	quality_control_issues	t	f
 45	Bioinformatics and QC metrics	raw sequence data processing method	user_bioinformatic_analyses	raw_sequence_data_processing_method	f	f
 46	Bioinformatics and QC metrics	reference genome accession	user_bioinformatic_analyses	reference_genome_accession	f	f
 47	Bioinformatics and QC metrics	sequence assembly length	user_bioinformatic_analyses	sequence_assembly_length	f	f
@@ -76,7 +76,7 @@ COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, 
 74	Public repository information	sequence_submitted_by_contact_email	public_repository_information	contact_information	f	f
 75	Public repository information	sequence_submitted_by_contact_name	public_repository_information	contact_information	f	f
 76	Public repository information	SRA_accession	public_repository_information	sra_accession	f	f
-77	Risk assessment information	experiment_intervention_details	risk_assessment	experimental_intervention_details	f	f
+77	Risk assessment information	experimental_intervention_details	risk_assessment	experimental_intervention_details	f	f
 78	Risk assessment information	experimental_intervention	risk_activity	term_id	t	t
 79	Risk assessment information	prevalence_metrics	risk_assessment	prevalence_metrics	f	f
 80	Risk assessment information	prevalence_metrics_details	risk_assessment	prevalence_metrics_details	f	f
@@ -94,8 +94,8 @@ COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, 
 92	Sample collection and processing	collection_method	collection_information	collection_method	t	f
 93	Sample collection and processing	environmental_material	environmental_data_material	term_id	t	t
 94	Sample collection and processing	environmental_site	environmental_data_site	term_id	t	t
-95	Sample collection and processing	experimental _protocol_field	extraction_information	experimental_protocol_field	f	f
-96	Sample collection and processing	experimental_specimen_role _type	extraction_information	experimental_specimen_role_type	f	f
+95	Sample collection and processing	experimental _protocol_field	extractions	experimental_protocol_field	f	f
+96	Sample collection and processing	experimental_specimen_role _type	extractions	experimental_specimen_role_type	f	f
 97	Sample collection and processing	food_packaging	food_data_packaging	term_id	t	t
 98	Sample collection and processing	food_packaging_date	food_data	food_packaging_date	f	f
 99	Sample collection and processing	food_product	food_data_product	term_id	t	t
@@ -109,17 +109,17 @@ COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, 
 107	Sample collection and processing	geo_loc_name (site)	geo_loc	site	f	f
 108	Sample collection and processing	geo_loc_name (state/province/region)	geo_loc	state_province_region	t	f
 109	Sample collection and processing	host_origin geo_loc (country)	hosts	host_origin_geo_loc_name_country	t	f
-110	Sample collection and processing	nucleic acid extraction kit	extraction_information	nucleic_acid_extraction_kit	f	f
-111	Sample collection and processing	nucleic acid extraction method	extraction_information	nucleic_acid_extraction_method	f	f
-112	Sample collection and processing	nucleic_acid_storage_duration_unit	extraction_information	nucleic_acid_storage_duration_unit	t	f
-113	Sample collection and processing	nucleic_acid_storage_duration_value	extraction_information	nucleic_acid_storage_duration_value	f	f
-114	Sample collection and processing	sample_volume_measurement_value	extraction_information	sample_volume_measurement_value	f	f
-115	Sample collection and processing	sample_volume_measurement_unit	extraction_information	sample_volume_measurement_unit	t	t
+110	Sample collection and processing	nucleic acid extraction kit	extractions	nucleic_acid_extraction_kit	f	f
+111	Sample collection and processing	nucleic acid extraction method	extractions	nucleic_acid_extraction_method	f	f
+112	Sample collection and processing	nucleic_acid_storage_duration_unit	extractions	nucleic_acid_storage_duration_unit	t	f
+113	Sample collection and processing	nucleic_acid_storage_duration_value	extractions	nucleic_acid_storage_duration_value	f	f
+114	Sample collection and processing	sample_volume_measurement_value	extractions	sample_volume_measurement_value	f	f
+115	Sample collection and processing	sample_volume_measurement_unit	extractions	sample_volume_measurement_unit	t	t
 116	Sample collection and processing	original_sample_description	collection_information	original_sample_description	f	f
 117	Sample collection and processing	presampling_activity	sample_activity	term_id	t	t
 118	Sample collection and processing	presampling_activity_details	collection_information	presampling_activity_details	f	f
 119	Sample collection and processing	purpose_of_sampling	sample_purposes	term_id	t	t
-120	Sample collection and processing	residual_sample_status	extraction_information	residual_sample_status	t	f
+120	Sample collection and processing	residual_sample_status	extractions	residual_sample_status	t	f
 121	Sample collection and processing	sample_collected_by	collection_information	sample_collected_by	t	f
 122	Sample collection and processing	sample_collected_by_laboratory_name	collection_information	contact_information	f	f
 123	Sample collection and processing	sample_collection_date	collection_information	sample_collection_date	f	f
@@ -131,8 +131,8 @@ COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, 
 129	Sample collection and processing	sample_plan_ID	collection_information	project_id	f	f
 130	Sample collection and processing	sample_plan_name	collection_information	project_id	f	f
 131	Sample collection and processing	sample_received_date	collection_information	sample_received_date	f	f
-132	Sample collection and processing	sample_storage_duration_unit	extraction_information	sample_storage_duration_unit	t	f
-133	Sample collection and processing	sample_storage_duration_value	extraction_information	sample_storage_duration_value	f	f
+132	Sample collection and processing	sample_storage_duration_unit	extractions	sample_storage_duration_unit	t	f
+133	Sample collection and processing	sample_storage_duration_value	extractions	sample_storage_duration_value	f	f
 134	Sample collection and processing	sample_storage_medium	collection_information	sample_storage_medium	f	f
 135	Sample collection and processing	sample_storage_method	collection_information	sample_storage_method	f	f
 136	Sample collection and processing	specimen_processing	collection_information	specimen_processing	t	f
@@ -184,7 +184,9 @@ COPY public.template_mapping (id, grdi_group, grdi_field, vmr_table, vmr_field, 
 182	Taxonomic identification information	taxonomic analysis report filename	user_bioinformatic_analyses	taxonomic_analysis_report_filename	f	f
 183	Taxonomic identification information	taxonomic reference database name	user_bioinformatic_analyses	taxonomic_reference_database_name	f	f
 184	Taxonomic identification information	taxonomic reference database version	user_bioinformatic_analyses	taxonomic_reference_database_version	f	f
+185	Sample collection and processing	label_claim	food_data_label_claims	term_id	t	t
+186	Sample collection and processing	environmental_material_constituent	environmental_data_material_constituents	term_id	f	t
 \.
 
-SELECT pg_catalog.setval('public.template_mapping_id_seq', 184, true);
+SELECT pg_catalog.setval('public.template_mapping_id_seq', 186, true);
 

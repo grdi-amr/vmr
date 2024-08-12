@@ -1,4 +1,4 @@
-CREATE TABLE schema_changes (
+CREATE TABLE db_versions (
 	id int4 PRIMARY KEY,
 	major_release int NOT NULL,
 	minor_release int NOT NULL, 
@@ -7,6 +7,6 @@ CREATE TABLE schema_changes (
 	date_applied date NOT NULL
 );
 
-INSERT INTO schema_changes 
+INSERT INTO db_versions
 	(id, major_release, minor_release, script_name, grdi_template_version, date_applied)
 	VALUES (1, 0, 0, 'initial installation', 'v11.1.1', CURRENT_DATE);
