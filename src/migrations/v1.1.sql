@@ -2,7 +2,7 @@ BEGIN;
 
 INSERT INTO db_versions
 	(id, major_release, minor_release, script_name, grdi_template_version, date_applied)
-	VALUES (2, 1, 0, 'v1.1.sql', 'v12.2.2', CURRENT_DATE);
+	VALUES (2, 1, 1, 'v1.1.sql', 'v12.2.2', CURRENT_DATE);
 
 -- Add a new column to the ontology terms table 
 ALTER TABLE ontology_terms 
