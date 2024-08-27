@@ -53,8 +53,7 @@ SELECT p.id AS database_id,
 	      ON i.sample_id = s.id
        LEFT JOIN wgs 
 	      ON wgs.isolate_id = i.id
-GROUP BY p.id
-;
+GROUP BY p.id;
    
 
 
