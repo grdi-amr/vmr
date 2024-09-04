@@ -4,6 +4,7 @@ AS
 -- conversion into NCBI antibiogram.
 WITH amr AS (
     SELECT i.id AS isolate_id, 
+           i.isolate_id AS user_isolate_id,
 	   ontology_term(amr.antimicrobial_agent) AS ab,
 	   ontology_id(amr.antimicrobial_phenotype) AS pheno,
 	   ontology_id(amr.measurement_sign) AS sign,
@@ -20,7 +21,7 @@ WITH amr AS (
 	   LEFT JOIN amr_antibiotics_profile as amr
 		  ON amr.test_id = tests.id)
 -- Prepare view according to substitution rules	      
-SELECT isolate_id, 
+SELECT user_isolate_id AS isolate_id, 
        -- Antibiotic
        CASE WHEN ab = 'Amoxicillin-clavulanic' THEN 'amoxicillin-clavulanic acid' 
 	    WHEN ab = 'Polymyxin B' THEN 'polymyxin B' 
