@@ -37,23 +37,3 @@ AS
     FROM alternative_isolate_ids 
 GROUP BY isolate_id;
 
-CREATE VIEW project_stats
-AS
-SELECT p.id AS database_id, 
-       p.sample_plan_id AS "Sample plan ID",
-       p.sample_plan_name AS "Sample plan name",
-       project_name AS "Project name",
-       Count(DISTINCT s.id) AS "Number of Samples",
-       Count(DISTINCT i.id) AS "Number of Isolates",
-       Count(DISTINCT wgs.sequencing_id) AS "Number of WGS" 
-  FROM projects AS p
-       LEFT JOIN samples AS s
-	      ON p.id = s.project_id
-       LEFT JOIN isolates AS i
-	      ON i.sample_id = s.id
-       LEFT JOIN wgs 
-	      ON wgs.isolate_id = i.id
-GROUP BY p.id;
-   
-
-
