@@ -37,3 +37,32 @@ AS
     FROM alternative_isolate_ids 
 GROUP BY isolate_id;
 
+CREATE VIEW projects_samples_isolates 
+AS
+SELECT p.id AS project_id, 
+       p.sample_plan_id, 
+       p.sample_plan_name,
+       p.project_name,
+       p.description,
+       s.id AS sample_id, 
+       s.sample_collector_sample_id AS sample_collector_sample_id,
+       i.id AS isolate_id,
+       i.isolate_id AS user_isolate_id, 
+       i.organism,
+       i.strain,
+       i.microbiological_method,
+       i.progeny_isolate_id,
+       i.isolated_by,
+       i.contact_information,
+       i.isolation_date,
+       i.isolate_received_date,
+       i.taxonomic_identification_process,
+       i.taxonomic_identification_process_details,
+       i.serovar,
+       i.serotyping_method,
+       i.phagetype
+FROM projects AS p
+     LEFT JOIN samples AS s 
+            ON s.project_id = p.id
+     LEFT JOIN isolates AS i
+            ON i.sample_id = s.id;
