@@ -21,7 +21,7 @@ WITH amr AS (
 	   LEFT JOIN amr_antibiotics_profile as amr
 		  ON amr.test_id = tests.id)
 -- Prepare view according to substitution rules	      
-SELECT user_isolate_id AS isolate_id, 
+SELECT user_isolate_id AS sample_name, 
        -- Antibiotic
        CASE WHEN ab = 'Amoxicillin-clavulanic' THEN 'amoxicillin-clavulanic acid' 
 	    WHEN ab = 'Polymyxin B' THEN 'polymyxin B' 
