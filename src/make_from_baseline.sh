@@ -30,8 +30,12 @@ do
 	psql --dbname $DB --file "$f"
 done
 
-# Functions 
-psql --dbname $DB --file functions/functions.sql
+## Functions 
+for func in functions/*.sql
+do
+  psql --dbname $DB --file "$func"
+done
+
 # Views 
 for f in views/*
 do
