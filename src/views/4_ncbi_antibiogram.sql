@@ -16,15 +16,14 @@ WITH amr AS (
 	   ontology_id(amr.testing_standard) AS standard,
            laboratory_typing_platform_version AS laboratory_typing_method_version_or_reagent
       FROM isolates AS i
-	   LEFT JOIN am_susceptibility_tests as tests
-                  ON i.id = tests.isolate_id 
-	   LEFT JOIN amr_antibiotics_profile as amr
-		  ON amr.test_id = tests.id)
+	   INNER JOIN am_susceptibility_tests as tests
+                   ON i.id = tests.isolate_id 
+	   INNER JOIN amr_antibiotics_profile as amr
+	 	   ON amr.test_id = tests.id)
 -- Prepare view according to substitution rules	      
 SELECT user_isolate_id AS sample_name, 
        -- Antibiotic
-       CASE WHEN ab = 'Amoxicillin-clavulanic' THEN 'amoxicillin-clavulanic acid' 
-	    WHEN ab = 'Polymyxin B' THEN 'polymyxin B' 
+       CASE WHEN ab = 'Polymyxin B' THEN 'polymyxin B' 
 	    ELSE LOWER(ab) 
 	END AS antibiotic,
        -- Resistance phenotype
@@ -46,7 +45,17 @@ SELECT user_isolate_id AS sample_name,
 	    ELSE NULL 
         END AS measurement_sign,
        -- Numerical measurement
-       measurement,
+       CASE WHEN ab = 'Amoxicillin-clavulanic acid'
+                 AND standard = 'ARO:3004366' -- CLSI
+                 THEN CONCAT(measurement, '/', measurement/2)::text -- Fixed 2:1 ratio
+            WHEN ab = 'Amoxicillin-clavulanic acid'
+                 AND standard = 'ARO:3004368' -- EUCAST -- 
+                 THEN CONCAT(measurement, '/', 2)::text
+            WHEN ab = 'Trimethoprim-sulfamethoxazole'
+                 AND standard = 'ARO:3004366' -- CLSI
+                 THEN CONCAT(measurement, '/', ROUND((measurement*19)::numeric, 2))::text -- Fixed 1:19 ratio
+            ELSE measurement::text
+        END AS measurement,
        -- Measurment units
        CASE WHEN units = 'UO:0000273' THEN 'mg/L'
       	    WHEN units = 'UO:0000016' THEN 'mm'
@@ -88,6 +97,6 @@ SELECT user_isolate_id AS sample_name,
             WHEN standard = 'ARO:3004369' THEN 'SFM' 
             WHEN standard = 'ARO:3007397' THEN 'SIR' 
             WHEN standard = 'ARO:3007398' THEN 'WRG' 
-            ELSE NULL
+            ELSE 'missing'
        END AS testing_standard
   FROM amr;
