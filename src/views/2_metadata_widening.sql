@@ -181,8 +181,6 @@ CREATE OR REPLACE VIEW wgs
           seq.sequencing_flow_cell_version,
           seq.library_preparation_kit,
           seq.sequencing_protocol,
-          seq.irida_isolate_id,
-          seq.irida_project_id,
           seq.r1_fastq_filename,
           seq.r2_fastq_filename,
           seq.fast5_filename,
