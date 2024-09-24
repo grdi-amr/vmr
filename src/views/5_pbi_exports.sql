@@ -35,7 +35,17 @@ INNER JOIN projects_samples_isolates AS pro ON pro.isolate_id = wgs.isolate_id
 
 CREATE OR REPLACE VIEW bioinf.arg
 AS
-SELECT *
+SELECT pro.project_id, 
+       pro.project_name,
+       pro.sample_id, 
+       pro.sample_collector_sample_id, 
+       pro.isolate_id,
+       pro.user_isolate_id, 
+       pro.sequencing_id, 
+       pro.library_id, 
+       amr.best_hit_aro, 
+       amr.cut_off, 
+       amr.model_type
 FROM pro_sam_iso_wgs_ids AS pro
 LEFT JOIN bioinf.amr_genes_profiles AS amr
        ON pro.sequencing_id = amr.sequencing_id
