@@ -50,7 +50,7 @@ SELECT pro.project_id,
        pro.sequencing_id, 
        pro.library_id, 
        org.organism,
-       amr.id AS amr_gene_id,
+       amr.id AS amr_genes_id,
        amr.best_hit_aro, 
        amr.cut_off, 
        amr.model_type
