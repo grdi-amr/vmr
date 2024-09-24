@@ -18,3 +18,25 @@ SELECT p.id AS database_id,
        LEFT JOIN am_susceptibility_tests as ab
 	      ON ab.isolate_id =  i.id
 GROUP BY p.id;
+
+CREATE OR REPLACE VIEW pro_sam_iso_wgs_ids
+AS 
+select pro.project_id, 
+       pro.project_name,
+       pro.sample_id, 
+       pro.sample_collector_sample_id, 
+       pro.isolate_id,
+       pro.user_isolate_id, 
+       wgs.sequencing_id, 
+       wgs.library_id
+from wgs 
+INNER JOIN projects_samples_isolates AS pro ON pro.isolate_id = wgs.isolate_id
+;
+
+CREATE OR REPLACE VIEW bioinf.arg
+AS
+SELECT *
+FROM pro_sam_iso_wgs_ids AS pro
+LEFT JOIN bioinf.amr_genes_profiles AS amr
+       ON pro.sequencing_id = amr.sequencing_id
+;
