@@ -184,7 +184,9 @@ CREATE OR REPLACE VIEW wgs
           seq.r1_fastq_filename,
           seq.r2_fastq_filename,
           seq.fast5_filename,
-          seq.assembly_filename
+          seq.assembly_filename, 
+          seq.r1_irida_id,
+          seq.r2_irida_id
      FROM wgs_extractions AS wgs
 LEFT JOIN extractions AS ext
        ON wgs.extraction_id = ext.id 
