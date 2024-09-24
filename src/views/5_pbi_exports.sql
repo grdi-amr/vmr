@@ -50,6 +50,7 @@ SELECT pro.project_id,
        pro.sequencing_id, 
        pro.library_id, 
        org.organism,
+       amr.id AS amr_gene_id,
        amr.best_hit_aro, 
        amr.cut_off, 
        amr.model_type
@@ -59,4 +60,5 @@ LEFT JOIN bioinf.amr_genes_profiles AS amr
 LEFT JOIN iso_orgs AS org 
        ON org.isolate_id = pro.isolate_id
 ;
+
 
