@@ -40,6 +40,14 @@ WITH iso_orgs AS (
 	 microbes.scientific_name AS organism
   FROM isolates
   LEFT JOIN microbes ON microbes.id = isolates.organism
+), 
+loc AS (
+  SELECT sample_id AS sample_id,
+         c.en_term AS country,
+	 reg.en_term AS region
+  FROM geo_loc as geo
+  LEFT JOIN countries AS c ON c.id = geo.country
+  LEFT JOIN state_province_regions AS reg ON reg.id = geo.state_province_region
 )
 SELECT pro.project_id, 
        pro.project_name,
@@ -50,6 +58,8 @@ SELECT pro.project_id,
        pro.sequencing_id, 
        pro.library_id, 
        org.organism,
+       loc.country, 
+       loc.region,
        amr.id AS amr_genes_id,
        amr.best_hit_aro, 
        amr.cut_off, 
@@ -59,11 +69,11 @@ LEFT JOIN bioinf.amr_genes_profiles AS amr
        ON pro.sequencing_id = amr.sequencing_id
 LEFT JOIN iso_orgs AS org 
        ON org.isolate_id = pro.isolate_id
+LEFT JOIN loc ON loc.sample_id = pro.sample_id
 ;
 
 CREATE OR REPLACE VIEW bioinf.n_arg_per_isolate_seq 
 AS 
-
 SELECT project_name,
        user_isolate_id,
        library_id,
@@ -77,3 +87,4 @@ SELECT project_name,
 FROM bioinf.arg AS arg
 GROUP BY project_name, user_isolate_id, library_id, organism, cut_off
 ;
+
