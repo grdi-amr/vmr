@@ -63,12 +63,17 @@ LEFT JOIN iso_orgs AS org
 
 CREATE OR REPLACE VIEW bioinf.n_arg_per_isolate_seq 
 AS 
+
 SELECT project_name,
        user_isolate_id,
        library_id,
        organism, 
        cut_off,
-       COUNT(amr_genes_id) AS n_arg
+       COUNT(amr_genes_id) AS n_arg,
+       CASE WHEN COUNT(amr_genes_id) > 0 THEN TRUE
+	    WHEN COUNT(amr_genes_id) = 0 THEN FALSE
+	    ELSE NULL 
+        END AS has_arg
 FROM bioinf.arg AS arg
 GROUP BY project_name, user_isolate_id, library_id, organism, cut_off
 ;
