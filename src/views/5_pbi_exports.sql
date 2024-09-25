@@ -61,4 +61,13 @@ LEFT JOIN iso_orgs AS org
        ON org.isolate_id = pro.isolate_id
 ;
 
-
+CREATE OR REPLACE VIEW bioinf.n_arg_per_isolate_seq 
+AS 
+SELECT project_name,
+       user_isolate_id,
+       library_id,
+       organism, 
+       COUNT(amr_genes_id)
+FROM bioinf.arg AS arg
+GROUP BY project_name, user_isolate_id, library_id, organism
+;
