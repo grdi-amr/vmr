@@ -67,7 +67,8 @@ SELECT project_name,
        user_isolate_id,
        library_id,
        organism, 
-       COUNT(amr_genes_id)
+       cut_off,
+       COUNT(amr_genes_id) AS n_arg
 FROM bioinf.arg AS arg
 GROUP BY project_name, user_isolate_id, library_id, organism
 ;
