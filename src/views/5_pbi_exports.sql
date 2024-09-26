@@ -65,11 +65,11 @@ SELECT pro.project_id,
        amr.cut_off, 
        amr.model_type
 FROM pro_sam_iso_wgs_ids AS pro
-LEFT JOIN bioinf.amr_genes_profiles AS amr
-       ON pro.sequencing_id = amr.sequencing_id
-LEFT JOIN iso_orgs AS org 
-       ON org.isolate_id = pro.isolate_id
-LEFT JOIN loc ON loc.sample_id = pro.sample_id
+INNER JOIN bioinf.amr_genes_profiles AS amr
+        ON pro.sequencing_id = amr.sequencing_id
+ LEFT JOIN iso_orgs AS org 
+        ON org.isolate_id = pro.isolate_id
+ LEFT JOIN loc ON loc.sample_id = pro.sample_id
 ;
 
 CREATE OR REPLACE VIEW bioinf.n_arg_per_isolate_seq 
