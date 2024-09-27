@@ -88,3 +88,37 @@ FROM bioinf.arg AS arg
 GROUP BY project_name, user_isolate_id, library_id, organism, cut_off
 ;
 
+CREATE OR REPLACE VIEW bioinf.n_with_drug
+AS
+WITH drugs AS (
+  SELECT 
+  DISTINCT arg.project_name, 
+           arg.user_isolate_id, 
+           arg.library_id, 
+           arg.organism, 
+           arg.cut_off,
+           drugs.drug_id
+      FROM bioinf.arg AS arg
+           JOIN bioinf.amr_genes_drugs AS drugs 
+             ON arg.amr_genes_id = drugs.amr_genes_id
+), n_isos AS (
+  SELECT project_name, 
+         organism, 
+         COUNT(DISTINCT library_id) AS n_isolates
+  FROM bioinf.arg 
+  GROUP BY project_name, organism
+)
+SELECT drugs.project_name, 
+       drugs.organism, 
+       drugs.cut_off,
+       drugs.drug_id, 
+       COUNT(*) AS n_with_drug, 
+       n_isos.n_isolates
+FROM drugs
+     JOIN n_isos ON n_isos.project_name = drugs.project_name 
+                AND n_isos.organism = drugs.organism
+GROUP BY drugs.project_name, 
+         drugs.organism, 
+         drugs.cut_off, 
+         n_isos.n_isolates, 
+         drugs.drug_id;
