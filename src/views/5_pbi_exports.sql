@@ -19,10 +19,10 @@ SELECT p.id AS database_id,
 	      ON ab.isolate_id =  i.id
 GROUP BY p.id;
 
-DROP VIEW IF EXISTS pro_sam_iso_wgs_ids CASCADE;
 CREATE OR REPLACE VIEW pro_sam_iso_wgs_ids
 AS 
 select pro.project_id, 
+       pro.project_name,
        pro.sample_id, 
        pro.sample_collector_sample_id, 
        pro.isolate_id,
@@ -35,12 +35,31 @@ INNER JOIN projects_samples_isolates AS pro ON pro.isolate_id = wgs.isolate_id
 
 CREATE OR REPLACE VIEW bioinf.arg
 AS
+WITH iso_orgs AS (
+  SELECT isolates.id AS isolate_id, 
+	 microbes.scientific_name AS organism
+  FROM isolates
+  LEFT JOIN microbes ON microbes.id = isolates.organism
+), 
+loc AS (
+  SELECT sample_id AS sample_id,
+         c.en_term AS country,
+	 reg.en_term AS region
+  FROM geo_loc as geo
+  LEFT JOIN countries AS c ON c.id = geo.country
+  LEFT JOIN state_province_regions AS reg ON reg.id = geo.state_province_region
+)
 SELECT pro.project_id, 
+       pro.project_name,
+       pro.sample_id, 
+       pro.sample_collector_sample_id, 
        pro.isolate_id,
+       pro.user_isolate_id, 
        pro.sequencing_id, 
-       isolates.organism AS organism_id,
-       geo_loc.country AS country_id, 
-       geo_loc.state_province_region AS province_id,
+       pro.library_id, 
+       org.organism,
+       loc.country, 
+       loc.region,
        amr.id AS amr_genes_id,
        amr.best_hit_aro, 
        amr.cut_off, 
@@ -48,46 +67,58 @@ SELECT pro.project_id,
 FROM pro_sam_iso_wgs_ids AS pro
  LEFT JOIN bioinf.amr_genes_profiles AS amr
         ON pro.sequencing_id = amr.sequencing_id
- LEFT JOIN isolates ON pro.isolate_id = isolates.id
- LEFT JOIN geo_loc ON geo_loc.sample_id = pro.sample_id
+ LEFT JOIN iso_orgs AS org 
+        ON org.isolate_id = pro.isolate_id
+ LEFT JOIN loc ON loc.sample_id = pro.sample_id
 ;
 
 CREATE OR REPLACE VIEW bioinf.n_arg_per_isolate_seq 
 AS 
-SELECT project_id,
-       isolate_id,
-       sequencing_id,
-       organism_id, 
+SELECT project_name,
+       user_isolate_id,
+       library_id,
+       organism, 
        cut_off,
        COUNT(amr_genes_id) AS n_arg,
        CASE WHEN COUNT(amr_genes_id) > 0 THEN TRUE
-      WHEN COUNT(amr_genes_id) = 0 THEN FALSE
-      ELSE NULL 
+	    WHEN COUNT(amr_genes_id) = 0 THEN FALSE
+	    ELSE NULL 
         END AS has_arg
 FROM bioinf.arg AS arg
-GROUP BY project_id, isolate_id, sequencing_id, organism_id, cut_off
+GROUP BY project_name, user_isolate_id, library_id, organism, cut_off
 ;
 
 CREATE OR REPLACE VIEW bioinf.n_with_drug
 AS
 WITH drugs AS (
   SELECT 
-  DISTINCT arg.project_id, 
-           arg.sequencing_id, 
-           arg.organism_id, 
+  DISTINCT arg.project_name, 
+           arg.user_isolate_id, 
+           arg.library_id, 
+           arg.organism, 
            arg.cut_off,
            drugs.drug_id
       FROM bioinf.arg AS arg
            JOIN bioinf.amr_genes_drugs AS drugs 
              ON arg.amr_genes_id = drugs.amr_genes_id
+), n_isos AS (
+  SELECT project_name, 
+         organism, 
+         COUNT(DISTINCT library_id) AS n_isolates
+  FROM bioinf.arg 
+  GROUP BY project_name, organism
 )
-SELECT drugs.project_id,
-       drugs.organism_id, 
+SELECT drugs.project_name, 
+       drugs.organism, 
        drugs.cut_off,
        drugs.drug_id, 
-       COUNT(*) AS n_with_drug
+       COUNT(*) AS n_with_drug, 
+       n_isos.n_isolates
 FROM drugs
-GROUP BY drugs.project_id,
-         drugs.organism_id, 
+     JOIN n_isos ON n_isos.project_name = drugs.project_name 
+                AND n_isos.organism = drugs.organism
+GROUP BY drugs.project_name, 
+         drugs.organism, 
          drugs.cut_off, 
+         n_isos.n_isolates, 
          drugs.drug_id;
