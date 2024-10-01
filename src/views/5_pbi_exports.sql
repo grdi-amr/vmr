@@ -106,6 +106,8 @@ AS
 SELECT arg.project_name,
        arg.organism,
        arg.library_id, 
+       arg.amr_genes_id,
+       best_hit_aro,
        arg.cut_off,
        drugs.drug_id
 FROM pbi.arg AS arg
