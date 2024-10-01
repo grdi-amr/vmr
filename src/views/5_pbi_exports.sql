@@ -33,7 +33,6 @@ from wgs
 INNER JOIN projects_samples_isolates AS pro ON pro.isolate_id = wgs.isolate_id
 ;
 
-DROP VIEW IF EXISTS bioinf.arg CASCADE;
 CREATE OR REPLACE VIEW bioinf.arg
 AS
 SELECT pro.project_id, 
@@ -53,7 +52,6 @@ FROM pro_sam_iso_wgs_ids AS pro
  LEFT JOIN geo_loc ON geo_loc.sample_id = pro.sample_id
 ;
 
-DROP VIEW IF EXISTS bioinf.n_arg_per_isolate_seq CASCADE;
 CREATE OR REPLACE VIEW bioinf.n_arg_per_isolate_seq 
 AS 
 SELECT project_id,
@@ -70,7 +68,6 @@ FROM bioinf.arg AS arg
 GROUP BY project_id, isolate_id, sequencing_id, organism_id, cut_off
 ;
 
-DROP VIEW IF EXISTS bioinf.n_with_drug CASCADE;
 CREATE OR REPLACE VIEW bioinf.n_with_drug
 AS
 WITH drugs AS (
