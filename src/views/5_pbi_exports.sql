@@ -113,6 +113,18 @@ FROM pbi.arg AS arg
      ON arg.amr_genes_id = drugs.amr_genes_id
 ;
 
+CREATE OR REPLACE VIEW pbi.arg_families
+AS
+SELECT arg.project_name,
+       arg.organism,
+       arg.library_id, 
+       arg.cut_off,
+       fam.amr_gene_family_id AS gene_family
+FROM pbi.arg AS arg
+     INNER JOIN bioinf.amr_genes_families AS fam
+     ON arg.amr_genes_id = fam.amr_genes_id
+;
+
 CREATE OR REPLACE VIEW pbi.n_with_drug
 AS
 WITH drugs AS (
