@@ -97,7 +97,7 @@ SELECT project_name,
 	    WHEN COUNT(amr_genes_id) = 0 THEN FALSE
 	    ELSE NULL 
         END AS has_arg
-FROM bioinf.arg AS arg
+FROM pbi.arg AS arg
 GROUP BY project_name, user_isolate_id, library_id, organism, cut_off
 ;
 
@@ -111,14 +111,14 @@ WITH drugs AS (
            arg.organism, 
            arg.cut_off,
            drugs.drug_id
-      FROM bioinf.arg AS arg
+      FROM pbi.arg AS arg
            JOIN bioinf.amr_genes_drugs AS drugs 
              ON arg.amr_genes_id = drugs.amr_genes_id
 ), n_isos AS (
   SELECT project_name, 
          organism, 
          COUNT(DISTINCT library_id) AS n_isolates
-  FROM bioinf.arg 
+  FROM pbi.arg 
   GROUP BY project_name, organism
 )
 SELECT drugs.project_name, 
