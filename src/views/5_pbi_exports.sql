@@ -1,3 +1,5 @@
+CREATE SCHEMA pbi;
+
 CREATE OR REPLACE VIEW project_stats
 AS
 SELECT p.id AS database_id, 
@@ -34,7 +36,7 @@ from wgs
 INNER JOIN projects_samples_isolates AS pro ON pro.isolate_id = wgs.isolate_id
 ;
 
-CREATE OR REPLACE VIEW bioinf.arg
+CREATE OR REPLACE VIEW pbi.arg
 AS
 WITH iso_orgs AS (
   SELECT isolates.id AS isolate_id, 
@@ -73,7 +75,17 @@ FROM pro_sam_iso_wgs_ids AS pro
  LEFT JOIN loc ON loc.sample_id = pro.sample_id
 ;
 
-CREATE OR REPLACE VIEW bioinf.n_arg_per_isolate_seq 
+CREATE VIEW pbi.seq_counts
+AS
+SELECT project_name, 
+       organism, 
+       COUNT(DISTINCT sequencing_id) AS n_sequences, 
+       COUNT(DISTINCT isolate_id) AS n_isolates
+FROM pbi.arg
+GROUP BY project_name, organism
+;
+
+CREATE OR REPLACE VIEW pbi.n_arg_per_isolate_seq 
 AS 
 SELECT project_name,
        user_isolate_id,
@@ -89,7 +101,7 @@ FROM bioinf.arg AS arg
 GROUP BY project_name, user_isolate_id, library_id, organism, cut_off
 ;
 
-CREATE OR REPLACE VIEW bioinf.n_with_drug
+CREATE OR REPLACE VIEW pbi.n_with_drug
 AS
 WITH drugs AS (
   SELECT 
