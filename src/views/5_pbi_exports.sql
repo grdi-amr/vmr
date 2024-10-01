@@ -162,3 +162,25 @@ GROUP BY drugs.project_name,
          drugs.cut_off, 
          n_isos.n_isolates, 
          drugs.drug_id;
+
+CREATE OR REPLACE VIEW pbi.arg_all_info
+AS
+SELECT arg.amr_genes_id,
+       arg.project_name,
+       arg.organism,
+       arg.library_id, 
+       arg.best_hit_aro,
+       arg.cut_off,
+       drugs.drug_id, 
+       fam.amr_gene_family_id AS gene_family, 
+       mek.resistance_mechanism_id AS resistance_mechanism
+FROM pbi.arg AS arg
+     LEFT JOIN bioinf.amr_genes_drugs AS drugs 
+     ON arg.amr_genes_id = drugs.amr_genes_id
+     LEFT JOIN bioinf.amr_genes_families AS fam 
+     ON arg.amr_genes_id = fam.amr_genes_id
+     LEFT JOIN bioinf.amr_genes_resistance_mechanism AS mek 
+     ON arg.amr_genes_id = mek.amr_genes_id
+WHERE arg.amr_genes_id IS NOT NULL
+;
+
