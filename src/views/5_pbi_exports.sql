@@ -19,6 +19,7 @@ SELECT p.id AS database_id,
 	      ON ab.isolate_id =  i.id
 GROUP BY p.id;
 
+DROP VIEW IF EXISTS pro_sam_iso_wgs_ids CASCADE;
 CREATE OR REPLACE VIEW pro_sam_iso_wgs_ids
 AS 
 select pro.project_id, 
