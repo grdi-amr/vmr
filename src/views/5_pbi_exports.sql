@@ -101,6 +101,18 @@ FROM pbi.arg AS arg
 GROUP BY project_name, user_isolate_id, library_id, organism, cut_off
 ;
 
+CREATE OR REPLACE VIEW pbi.arg_drugs
+AS
+SELECT arg.project_name,
+       arg.organism,
+       arg.library_id, 
+       arg.cut_off,
+       drugs.drug_id
+FROM pbi.arg AS arg
+     INNER JOIN bioinf.amr_genes_drugs AS drugs 
+     ON arg.amr_genes_id = drugs.amr_genes_id
+;
+
 CREATE OR REPLACE VIEW pbi.n_with_drug
 AS
 WITH drugs AS (
