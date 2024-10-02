@@ -197,12 +197,15 @@ SELECT arg.project_name AS "Project Name",
        food.id AS food_id,
        ontology_full_term(food.food_product_production_stream) AS "Production Stream", 
        food.food_packaging_date AS "Food Packaging Date", 
-       food.food_quality_date AS "Food Quality Date"
+       food.food_quality_date AS "Food Quality Date", 
+       countries.en_term AS "Origin Country"
   FROM pbi.arg AS arg
        LEFT JOIN food_data as food
               ON food.sample_id = arg.sample_id
        LEFT JOIN bioinf.amr_genes_drugs AS drugs 
               ON arg.amr_genes_id = drugs.amr_genes_id
+       LEFT JOIN countries 
+              ON countries.id = food.food_product_origin_country
 ;
 
 CREATE OR REPLACE VIEW pbi.arg_by_food_product
