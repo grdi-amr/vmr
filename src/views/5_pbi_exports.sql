@@ -184,3 +184,36 @@ FROM pbi.arg AS arg
 WHERE arg.amr_genes_id IS NOT NULL
 ;
 
+CREATE OR REPLACE VIEW pbi.arg_food
+AS
+SELECT arg.project_name AS "Project Name",
+       arg.organism AS "Organism",
+       arg.library_id,
+       arg.amr_genes_id, 
+       arg.best_hit_aro AS "Gene",
+       arg.cut_off AS "RGI Cut Off",
+       arg.model_type AS "RGI Model",
+       food.id AS food_id,
+       ontology_full_term(food.food_product_production_stream) AS "Production Stream", 
+       food.food_packaging_date AS "Food Packaging Date", 
+       food.food_quality_date AS "Food Quality Date"
+  FROM pbi.arg AS arg
+       LEFT JOIN food_data as food
+              ON food.sample_id = arg.sample_id
+;
+
+CREATE OR REPLACE VIEW pbi.arg_by_food_product
+AS 
+SELECT arg."Project Name", 
+       arg."Organism", 
+       arg.library_id, 
+       arg.amr_genes_id,
+       arg."RGI Cut Off",
+       arg."RGI Model",
+       arg."Gene",
+       ontology_full_term(prod.term_id) AS "Food Product"
+FROM pbi.arg_food AS arg
+     LEFT JOIN food_data_product as prod
+            ON prod.id = arg.food_id
+;          
+
