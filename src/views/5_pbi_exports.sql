@@ -200,6 +200,8 @@ SELECT arg.project_name AS "Project Name",
   FROM pbi.arg AS arg
        LEFT JOIN food_data as food
               ON food.sample_id = arg.sample_id
+       LEFT JOIN bioinf.amr_genes_drugs AS drugs 
+              ON arg.amr_genes_id = drugs.amr_genes_id
 ;
 
 CREATE OR REPLACE VIEW pbi.arg_by_food_product
