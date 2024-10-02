@@ -193,6 +193,7 @@ SELECT arg.project_name AS "Project Name",
        arg.best_hit_aro AS "Gene",
        arg.cut_off AS "RGI Cut Off",
        arg.model_type AS "RGI Model",
+       drugs.drug_id AS "Drug",
        food.id AS food_id,
        ontology_full_term(food.food_product_production_stream) AS "Production Stream", 
        food.food_packaging_date AS "Food Packaging Date", 
@@ -213,6 +214,7 @@ SELECT arg."Project Name",
        arg."RGI Cut Off",
        arg."RGI Model",
        arg."Gene",
+       arg."Drug",
        ontology_full_term(prod.term_id) AS "Food Product"
 FROM pbi.arg_food AS arg
      LEFT JOIN food_data_product as prod
