@@ -168,6 +168,7 @@ AS
 SELECT arg.amr_genes_id,
        arg.project_name,
        arg.organism,
+       arg.isolate_id,
        arg.library_id, 
        arg.best_hit_aro,
        arg.cut_off,
@@ -222,5 +223,33 @@ SELECT arg."Project Name",
 FROM pbi.arg_food AS arg
      LEFT JOIN food_data_product as prod
             ON prod.id = arg.food_id
-;          
+;
 
+CREATE OR REPLACE VIEW pbi.mob_suite
+AS
+WITH rep_types AS (
+  SELECT amr_genes_id, 
+         STRING_AGG(rep_type, '; ') AS rep_types
+  FROM bioinf.amr_ref_type
+  GROUP BY amr_genes_id
+)
+SELECT arg.amr_genes_id, 
+       arg.project_name AS "Project Name", 
+       arg.organism AS "Organism", 
+       arg.best_hit_aro AS "Gene", 
+       arg.drug_id AS "Drug", 
+       arg.gene_family AS "Gene Family", 
+       arg.resistance_mechanism AS "Resistance Mechanism",
+       mob.primary_cluster_id AS "Plasmid Primary Cluster ID",
+       CASE WHEN mob.secondary_cluster_id = mob.primary_cluster_id 
+                 THEN NULL 
+            ELSE mob.secondary_cluster_id
+        END AS "Plasmid Secondary Cluster ID",
+       rep.rep_types AS "Plasmid Replication Types"
+FROM bioinf.amr_mob_suite AS mob
+      LEFT JOIN rep_types AS rep 
+             ON rep.amr_genes_id = mob.amr_genes_id
+     RIGHT JOIN pbi.arg_all_info AS arg 
+             ON arg.amr_genes_id = mob.amr_genes_id
+WHERE molecule_type = 'plasmid'
+;
