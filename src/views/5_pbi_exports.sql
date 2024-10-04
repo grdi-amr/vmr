@@ -236,6 +236,7 @@ WITH rep_types AS (
 SELECT arg.amr_genes_id, 
        arg.project_name AS "Project Name", 
        arg.organism AS "Organism", 
+       arg.library_id,
        arg.best_hit_aro AS "Gene", 
        arg.drug_id AS "Drug", 
        arg.gene_family AS "Gene Family", 
@@ -249,7 +250,7 @@ SELECT arg.amr_genes_id,
 FROM bioinf.amr_mob_suite AS mob
       LEFT JOIN rep_types AS rep 
              ON rep.amr_genes_id = mob.amr_genes_id
-     RIGHT JOIN pbi.arg_all_info AS arg 
+     INNER JOIN pbi.arg_all_info AS arg 
              ON arg.amr_genes_id = mob.amr_genes_id
 WHERE molecule_type = 'plasmid'
 ;
