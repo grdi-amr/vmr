@@ -27,7 +27,7 @@ CREATE TABLE bioinf.res_mlst (
 );
 CREATE TABLE bioinf.mlst_sequence (
     id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    mlst_sequence int,
+    mlst_sequence text,
     mlst_scheme text
 );
 CREATE TABLE bioinf.res_plasmid_finder (
