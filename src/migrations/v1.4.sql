@@ -63,8 +63,8 @@ CREATE TABLE bioinf.virulence_VFDB (
 
 -- Virulence finder results
 CREATE TABLE bioinf.virulence_VF (
-    virulance_VFDB_id int4 REFERENCES bioinf.virulence_VFDB(id),	
+    id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    sequencing_id int4 REFERENCES sequencing(id),
     vf_gene text,
-    vf_protein_function text,
-    CONSTRAINT virulence_VF_pkey PRIMARY KEY (virulance_VFDB_id, vf_gene)
+    vf_protein_function text
 );
