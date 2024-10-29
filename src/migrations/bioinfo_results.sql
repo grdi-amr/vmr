@@ -2,7 +2,7 @@
 CREATE TABLE bioinf.resfinder (
     id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     sequencing_id int4 REFERENCES sequencing(id),
-    resfinder_gene text,
+    resfinder_gene text
 );
 
 CREATE TABLE bioinf.resfinder_predicted_phenotypes (
@@ -50,7 +50,7 @@ CREATE TABLE bioinf.salmonella_serotyping  (
 
 --VFDB using Abricate --> Multiple genes for each sequencing.
 CREATE TABLE bioinf.virulence_VFDB (
-    id PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     sequencing_id int4 REFERENCES sequencing(id),
     vfdb_gene_accession text,
     vfdb_product_resisence text
@@ -58,8 +58,8 @@ CREATE TABLE bioinf.virulence_VFDB (
 
 -- Virulence finder results
 CREATE TABLE bioinf.virulence_VF (
-    virulance_VFDB_id int4 REFERENCES (bioinf.virulence_VFDB(id),	
+    virulance_VFDB_id int4 REFERENCES bioinf.virulence_VFDB(id),	
     vf_gene text,
-    vf_protein_function text
+    vf_protein_function text,
     CONSTRAINT virulence_VF_pkey PRIMARY KEY (virulance_VFDB_id, vf_gene)
 );
