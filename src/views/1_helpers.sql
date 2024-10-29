@@ -37,7 +37,7 @@ AS
     FROM alternative_isolate_ids 
 GROUP BY isolate_id;
 
-CREATE VIEW projects_samples_isolates 
+CREATE OR REPLACE VIEW projects_samples_isolates 
 AS
 SELECT p.id AS project_id, 
        p.sample_plan_id, 
@@ -50,6 +50,8 @@ SELECT p.id AS project_id,
        i.isolate_id AS user_isolate_id, 
        i.biosample_id AS BioSample_accession,
        i.bioproject_id AS BioProject_accession,
+       i.irida_project_id,
+       i.irida_sample_id,
        i.organism,
        i.strain,
        i.microbiological_method,
