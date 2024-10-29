@@ -1,3 +1,8 @@
+-- Update versioning table 
+INSERT INTO db_versions
+	(id, major_release, minor_release, script_name, grdi_template_version, date_applied)
+	VALUES (5, 1, 4, 'v1.4.sql', 'v12.2.2', CURRENT_DATE);
+
 --Resfinder results - One sequencing can get multiple genes results which can have many predicted phenotypes each gene
 CREATE TABLE bioinf.resfinder (
     id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
