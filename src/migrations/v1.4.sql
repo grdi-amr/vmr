@@ -57,8 +57,8 @@ CREATE TABLE bioinf.salmonella_serotyping  (
 CREATE TABLE bioinf.virulence_VFDB (
     id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     sequencing_id int4 REFERENCES sequencing(id),
-    vfdb_gene_accession text,
-    vfdb_product_resisence text
+    gene_accession text,
+    product_resistance text
 );
 
 -- Virulence finder results
