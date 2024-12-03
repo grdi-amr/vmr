@@ -44,11 +44,11 @@ SELECT g.sample_id					       AS sample_id,
 -- Anatomical data wide
 CREATE OR REPLACE VIEW anatomical_data_wide 
 AS
-SELECT a.sample_id				  AS sample_id, 
-       ontology_full_term(a.anatomical_region) AS anatomical_region,
-       body.vals				  AS body_product,
-       material.vals				  AS anatomical_material, 
-       part.vals				  AS anatomical_part
+SELECT a.sample_id			        AS sample_id, 
+       ontology_full_term(a.anatomical_region)  AS anatomical_region,
+       body.vals			        AS body_product,
+       material.vals		                AS anatomical_material, 
+       part.vals			        AS anatomical_part
   FROM anatomical_data AS a 
        LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('anatomical_data_body')) AS body 
               ON body.id = a.id
