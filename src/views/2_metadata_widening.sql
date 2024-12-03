@@ -83,6 +83,42 @@ SELECT f.sample_id					    AS sample_id,
        LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('food_data_source')) AS sources
 	      ON sources.id = f.id;
 
+-- Environmental data wide
+WITH mat_const AS (
+  SELECT id, 
+         string_agg(term_id, '; ') AS vals 
+    FROM environmental_data_material_constituents 
+GROUP BY id
+)
+SELECT e.sample_id				     AS sample_id, 
+       e.air_temperature, 
+       ontology_full_term(e.air_temperature_units)   AS air_temperature_units, 
+       e.water_depth, 
+       ontology_full_term(e.water_depth_units)       AS water_depth_units,
+       e.water_temperature, 
+       ontology_full_term(e.water_temperature_units) AS water_temperature_units,
+       e.sediment_depth,
+       ontology_full_term(e.sediment_depth_units)    AS sediment_depth_units,
+       e.available_data_type_details, 
+       avail_type.vals				     AS available_data_types,
+       animal_or_plant_pops.vals		     AS animal_or_plant_population, 
+       mat.vals					     AS environmental_materials,
+       mat_const.vals				     AS environmental_material_constituent,
+       site.vals				     AS environmental_sites,
+       weather.vals				     AS weather_type
+  FROM environmental_data AS e
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('environmental_data_animal_plant')) AS animal_or_plant_pops
+	      ON animal_or_plant_pops.id = e.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('environmental_data_available_data_type')) AS avail_type
+	      ON avail_type.id = e.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('environmental_data_material')) AS mat 
+	      ON mat.id = e.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('environmental_data_site')) AS site
+	      ON site.id = e.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('environmental_data_weather_type')) AS weather
+	      ON weather.id = e.id
+       LEFT JOIN mat_const ON mat_const.id = e.id;
+
 -- Host table widening
 CREATE OR REPLACE VIEW host_organism_terms 
 AS 
