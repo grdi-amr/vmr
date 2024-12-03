@@ -84,6 +84,8 @@ SELECT f.sample_id					    AS sample_id,
 	      ON sources.id = f.id;
 
 -- Environmental data wide
+CREATE OR REPLACE VIEW env_data_wide 
+AS
 WITH mat_const AS (
   SELECT id, 
          string_agg(term_id, '; ') AS vals 
@@ -146,6 +148,37 @@ SELECT h.id AS host_id,
        LEFT JOIN countries AS c
 	      ON h.host_origin_geo_loc_name_country = c.id;
 
+-- Isolate table in wide form
+CREATE OR REPLACE VIEW isolates_wide 
+AS 
+SELECT iso.id						        AS isolate_id,
+       iso.sample_id					        AS sample_id,
+       iso.isolate_id					        AS user_isolate_id, 
+       alt.alt_isolate_names                                    AS alternative_isolate_ids,
+       bind_ontology(org.scientific_name, org.ontology_id)      AS organism, 
+       iso.microbiological_method, 
+       iso.progeny_isolate_id, 
+       ontology_full_term(iso.isolated_by)		        AS isolated_by, 
+       con.contact_name					        AS isolated_by_contact_name, 
+       con.contact_email			                AS isolated_by_contact_email,
+       con.laboratory_name			                AS isolated_by_lab_name, 
+       iso.isolation_date, 
+       iso.isolate_received_date, 
+       ontology_full_term(iso.taxonomic_identification_process) AS taxonomic_identification_process, 
+       iso.taxonomic_identification_process_details, 
+       iso.serovar, 
+       iso.serotyping_method, 
+       iso.phagetype, 
+       iso.irida_project_id, 
+       iso.irida_sample_id, 
+       iso.bioproject_id,
+       iso.biosample_id
+  FROM isolates AS iso
+       LEFT JOIN alt_iso_wide	     AS alt ON alt.isolate_id = iso.id
+       LEFT JOIN microbes	     AS org ON org.id = iso.organism
+       LEFT JOIN strains	     AS str ON str.id = iso.strain
+       LEFT JOIN contact_information AS con ON con.id = iso.contact_information
+;
 
 CREATE OR REPLACE VIEW wgs
        AS
@@ -189,70 +222,4 @@ LEFT JOIN extractions AS ext
        ON wgs.extraction_id = ext.id 
 LEFT JOIN sequencing AS seq
        ON ext.id = seq.extraction_id;
-
-CREATE OR REPLACE VIEW full_sample_metadata 
-       AS
-   SELECT s.id,
-          s.sample_collector_sample_id,
-          p.sample_plan_id,
-          p.sample_plan_name, 
-          p.project_name,
-          c.id AS collection_information_id,
-          c.sample_collected_by,
-          c.collection_method,
-          c.collection_device,
-          c.sample_storage_medium,
-          c.sample_storage_method,
-          c.specimen_processing,
-          c.original_sample_description,
-          c.sample_received_date,
-          c.presampling_activity_details,
-          c.sample_collection_date_precision,
-          c.sample_collection_date,
-          c.contact_information,
-          ci.laboratory_name AS sample_collected_by_laboratory_name, 
-          ci.contact_name AS sample_collector_contact_name, 
-          ci.contact_email AS sample_collector_contact_email,
-          g.country AS geo_loc_country,
-          g.state_province_region AS geo_loc_name_state_province_region,
-          site.geo_loc_name_site AS geo_loc_name_site,
-          g.latitude AS geo_loc_latitude,
-          g.longitude AS geo_loc_longitude,
-          e.id AS environmental_data_id,
-          e.air_temperature,
-          e.sediment_depth,
-          e.water_depth,
-          e.water_temperature,
-          h.host_organism,
-          h.host_origin_geo_loc_name_country,
-          h.host_age_bin,
-          h.host_disease,
-          h.host_food_production_name,
-          h.host_breed,
-          h.host_ecotype,
-          a.anatomical_region,
-          f.id AS food_data_id,
-          f.food_product_production_stream,
-          f.food_product_origin_country,
-          f.food_packaging_date,
-          f.food_quality_date
-     FROM samples AS s
-LEFT JOIN projects as p
-       ON s.id = p.id
-LEFT JOIN collection_information AS c
-       ON s.id = c.sample_id
-LEFT JOIN contact_information AS ci
-       ON c.contact_information = ci.id
-LEFT JOIN geo_loc AS g 
-       ON s.id = g.sample_id
-LEFT JOIN geo_loc_name_sites AS site 
-       ON g.site = site.id
-LEFT JOIN environmental_data AS e
-       ON s.id = e.sample_id
-LEFT JOIN hosts AS h
-       ON s.id = h.sample_id
-LEFT JOIN anatomical_data AS a
-       ON s.id = a.sample_id
-LEFT JOIN food_data AS f
-       ON s.id = f.sample_id;
 
