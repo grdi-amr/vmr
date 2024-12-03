@@ -41,7 +41,7 @@ SELECT g.sample_id					       AS sample_id,
        LEFT JOIN geo_loc_name_sites AS sites ON sites.id = g.site
 ;  
 
--- Anatomical data 
+-- Anatomical data wide
 CREATE OR REPLACE VIEW anatomical_data_wide 
 AS
 SELECT a.sample_id				  AS sample_id, 
