@@ -237,25 +237,32 @@ LEFT JOIN anatomical_data AS a
 LEFT JOIN food_data AS f
        ON s.id = f.sample_id;
 
-CREATE OR REPLACE VIEW hosts_wide
-       AS
-   SELECT h.id AS host_id,
-          h.sample_id AS sample_id,
-          h.host_ecotype,
-          bind_ontology(ho.en_common_name, ho.ontology_id) AS host_common_name,
-          bind_ontology(ho.scientific_name, ho.ontology_id) AS host_scientific_name,
-          h.host_breed,
-          bind_ontology(prod_name.en_term, prod_name.ontology_id) AS host_food_production_name,
-          h.host_disease,
-          bind_ontology(age.en_term, age.ontology_id) AS host_age_bin,
-          bind_ontology(c.en_term, c.ontology_id) AS host_origin_geo_loc_name_country
-     FROM hosts AS h 
-LEFT JOIN host_organisms AS ho
-       ON h.host_organism = ho.id
-LEFT JOIN ontology_terms AS age
-       ON h.host_age_bin = age.id 
-LEFT JOIN ontology_terms AS prod_name
-       ON h.host_food_production_name = prod_name.id 
-LEFT JOIN countries AS c
-       ON h.host_origin_geo_loc_name_country = c.id;
+-- Host table widening
+
+CREATE OR REPLACE VIEW host_organism_terms 
+AS 
+SELECT id, 
+       bind_ontology(en_common_name,  ontology_id) AS host_common_name, 
+       CASE WHEN scientific_name IS NOT NULL THEN bind_ontology(scientific_name, ontology_id) ELSE NULL
+        END AS host_scientific_name
+  FROM host_organisms;
+
+CREATE OR REPLACE VIEW hosts_wide 
+AS
+SELECT h.id AS host_id,
+       h.sample_id AS sample_id,
+       host_org.host_common_name,
+       host_org.host_scientific_name,
+       h.host_ecotype,
+       h.host_breed,
+       ontology_full_term(host_food_production_name) AS host_food_production_name,
+       h.host_disease,
+       ontology_full_term(host_age_bin) AS host_age_bin,
+       bind_ontology(c.en_term, c.ontology_id) AS host_origin_geo_loc_name_country
+  FROM hosts AS h 
+       LEFT JOIN host_organism_terms AS host_org
+	      ON h.host_organism = host_org.id
+       LEFT JOIN countries AS c
+	      ON h.host_origin_geo_loc_name_country = c.id;
+
 
