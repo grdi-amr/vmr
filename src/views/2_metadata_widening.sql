@@ -26,6 +26,21 @@ SELECT c.sample_id,
 	      ON purposes.id = c.id
 ;
 
+-- Geographic location wide
+CREATE OR REPLACE VIEW geo_loc_wide 
+AS
+SELECT g.sample_id					       AS sample_id, 
+       bind_ontology(countries.en_term, countries.ontology_id) AS country,
+       bind_ontology(states.en_term, states.ontology_id)       AS state_province_region, 
+       g.latitude, 
+       g.longitude, 
+       sites.geo_loc_name_site				       AS geo_loc_site
+  FROM geo_loc AS g
+       LEFT JOIN countries ON countries.id = g.country
+       LEFT JOIN state_province_regions AS states ON states.id = g.state_province_region
+       LEFT JOIN geo_loc_name_sites AS sites ON sites.id = g.site
+;  
+
 CREATE OR REPLACE VIEW anatomical_data_wide
        AS
    SELECT a.id AS anatomical_data_id,
