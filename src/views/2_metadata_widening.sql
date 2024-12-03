@@ -57,6 +57,32 @@ SELECT a.sample_id			        AS sample_id,
        LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('anatomical_data_part')) AS part
               ON part.id = a.id;
 
+-- Food data wide
+CREATE OR REPLACE VIEW food_data_wide 
+AS
+SELECT f.sample_id					    AS sample_id,
+       bind_ontology(countries.en_term, countries.en_term)  AS food_product_origin_country,
+       ontology_full_term(f.food_product_production_stream) AS food_product_production_stream,
+       f.food_packaging_date, 
+       f.food_quality_date, 
+       claims.vals					    AS label_claim, 
+       packaging.vals					    AS food_packaging, 
+       products.vals					    AS food_product,
+       properties.vals					    AS food_product_properties,
+       sources.vals					    AS animal_source_of_food
+  FROM food_data AS f 
+       LEFT JOIN countries ON countries.id = f.food_product_origin_country
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('food_data_label_claims')) AS claims 
+	      ON claims.id = f.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('food_data_packaging')) AS packaging 
+	      ON packaging.id = f.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('food_data_product')) AS products
+	      ON products.id = f.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('food_data_product_property')) AS properties 
+	      ON properties.id = f.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('food_data_source')) AS sources
+	      ON sources.id = f.id;
+
 -- Host table widening
 CREATE OR REPLACE VIEW host_organism_terms 
 AS 
