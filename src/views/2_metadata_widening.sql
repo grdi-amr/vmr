@@ -41,14 +41,21 @@ SELECT g.sample_id					       AS sample_id,
        LEFT JOIN geo_loc_name_sites AS sites ON sites.id = g.site
 ;  
 
-CREATE OR REPLACE VIEW anatomical_data_wide
-       AS
-   SELECT a.id AS anatomical_data_id,
-          a.sample_id AS sample_id, 
-          bind_ontology(region.en_term, region.ontology_id) AS anatomical_region
-     FROM anatomical_data AS a
-LEFT JOIN ontology_terms as region
-       ON a.anatomical_region = region.id;
+-- Anatomical data 
+CREATE OR REPLACE VIEW anatomical_data_wide 
+AS
+SELECT a.sample_id				  AS sample_id, 
+       ontology_full_term(a.anatomical_region) AS anatomical_region,
+       body.vals				  AS body_product,
+       material.vals				  AS anatomical_material, 
+       part.vals				  AS anatomical_part
+  FROM anatomical_data AS a 
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('anatomical_data_body')) AS body 
+              ON body.id = a.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('anatomical_data_material')) AS material
+              ON material.id = a.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('anatomical_data_part')) AS part
+              ON part.id = a.id;
 
 CREATE OR REPLACE VIEW wgs
        AS
