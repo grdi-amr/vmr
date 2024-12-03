@@ -57,6 +57,34 @@ SELECT a.sample_id				  AS sample_id,
        LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('anatomical_data_part')) AS part
               ON part.id = a.id;
 
+-- Host table widening
+CREATE OR REPLACE VIEW host_organism_terms 
+AS 
+SELECT id, 
+       bind_ontology(en_common_name,  ontology_id) AS host_common_name, 
+       CASE WHEN scientific_name IS NOT NULL THEN bind_ontology(scientific_name, ontology_id) ELSE NULL
+        END AS host_scientific_name
+  FROM host_organisms;
+
+CREATE OR REPLACE VIEW hosts_wide 
+AS
+SELECT h.id AS host_id,
+       h.sample_id AS sample_id,
+       host_org.host_common_name,
+       host_org.host_scientific_name,
+       h.host_ecotype,
+       h.host_breed,
+       ontology_full_term(host_food_production_name) AS host_food_production_name,
+       h.host_disease,
+       ontology_full_term(host_age_bin) AS host_age_bin,
+       bind_ontology(c.en_term, c.ontology_id) AS host_origin_geo_loc_name_country
+  FROM hosts AS h 
+       LEFT JOIN host_organism_terms AS host_org
+	      ON h.host_organism = host_org.id
+       LEFT JOIN countries AS c
+	      ON h.host_origin_geo_loc_name_country = c.id;
+
+
 CREATE OR REPLACE VIEW wgs
        AS
    SELECT wgs.isolate_id,
@@ -165,32 +193,4 @@ LEFT JOIN anatomical_data AS a
        ON s.id = a.sample_id
 LEFT JOIN food_data AS f
        ON s.id = f.sample_id;
-
--- Host table widening
-
-CREATE OR REPLACE VIEW host_organism_terms 
-AS 
-SELECT id, 
-       bind_ontology(en_common_name,  ontology_id) AS host_common_name, 
-       CASE WHEN scientific_name IS NOT NULL THEN bind_ontology(scientific_name, ontology_id) ELSE NULL
-        END AS host_scientific_name
-  FROM host_organisms;
-
-CREATE OR REPLACE VIEW hosts_wide 
-AS
-SELECT h.id AS host_id,
-       h.sample_id AS sample_id,
-       host_org.host_common_name,
-       host_org.host_scientific_name,
-       h.host_ecotype,
-       h.host_breed,
-       ontology_full_term(host_food_production_name) AS host_food_production_name,
-       h.host_disease,
-       ontology_full_term(host_age_bin) AS host_age_bin,
-       bind_ontology(c.en_term, c.ontology_id) AS host_origin_geo_loc_name_country
-  FROM hosts AS h 
-       LEFT JOIN host_organism_terms AS host_org
-	      ON h.host_organism = host_org.id
-       LEFT JOIN countries AS c
-	      ON h.host_origin_geo_loc_name_country = c.id;
 
