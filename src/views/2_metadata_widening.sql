@@ -29,16 +29,16 @@ SELECT c.sample_id,
 -- Geographic location wide
 CREATE OR REPLACE VIEW geo_loc_wide 
 AS
-SELECT g.sample_id					       AS sample_id, 
-       bind_ontology(countries.en_term, countries.ontology_id) AS country,
-       bind_ontology(states.en_term, states.ontology_id)       AS state_province_region, 
-       g.latitude, 
-       g.longitude, 
-       sites.geo_loc_name_site				       AS geo_loc_site
-  FROM geo_loc AS g
-       LEFT JOIN countries ON countries.id = g.country
-       LEFT JOIN state_province_regions AS states ON states.id = g.state_province_region
-       LEFT JOIN geo_loc_name_sites AS sites ON sites.id = g.site
+SELECT geo.sample_id				   AS sample_id, 
+       bind_ontology(cnt.en_term, cnt.ontology_id) AS country,
+       bind_ontology(sta.en_term, sta.ontology_id) AS state_province_region, 
+       geo.latitude, 
+       geo.longitude, 
+       sit.geo_loc_name_site			   AS geo_loc_site
+  FROM geo_loc AS geo
+       LEFT JOIN countries              AS cnt ON cnt.id = geo.country
+       LEFT JOIN state_province_regions AS sta ON sta.id = geo.state_province_region
+       LEFT JOIN geo_loc_name_sites     AS sit ON sit.id = geo.site
 ;  
 
 -- Anatomical data wide
@@ -132,21 +132,19 @@ SELECT id,
 
 CREATE OR REPLACE VIEW hosts_wide 
 AS
-SELECT h.id AS host_id,
-       h.sample_id AS sample_id,
-       host_org.host_common_name,
-       host_org.host_scientific_name,
-       h.host_ecotype,
-       h.host_breed,
-       ontology_full_term(host_food_production_name) AS host_food_production_name,
-       h.host_disease,
-       ontology_full_term(host_age_bin) AS host_age_bin,
-       bind_ontology(c.en_term, c.ontology_id) AS host_origin_geo_loc_name_country
-  FROM hosts AS h 
-       LEFT JOIN host_organism_terms AS host_org
-	      ON h.host_organism = host_org.id
-       LEFT JOIN countries AS c
-	      ON h.host_origin_geo_loc_name_country = c.id;
+SELECT hst.id                                            AS host_id,
+       hst.sample_id                                     AS sample_id,
+       org.host_common_name,
+       org.host_scientific_name,
+       hst.host_ecotype,
+       hst.host_breed,
+       ontology_full_term(hst.host_food_production_name) AS host_food_production_name,
+       hst.host_disease,
+       ontology_full_term(hst.host_age_bin)              AS host_age_bin,
+       bind_ontology(cnt.en_term, cnt.ontology_id)       AS host_origin_geo_loc_name_country
+  FROM hosts AS hst 
+       LEFT JOIN host_organism_terms AS org ON org.id = hst.host_organism
+       LEFT JOIN countries           AS cnt ON cnt.id = hst.host_origin_geo_loc_name_country;
 
 -- Isolate table in wide form
 CREATE OR REPLACE VIEW isolates_wide 
@@ -177,8 +175,7 @@ SELECT iso.id						        AS isolate_id,
        LEFT JOIN alt_iso_wide	     AS alt ON alt.isolate_id = iso.id
        LEFT JOIN microbes	     AS org ON org.id = iso.organism
        LEFT JOIN strains	     AS str ON str.id = iso.strain
-       LEFT JOIN contact_information AS con ON con.id = iso.contact_information
-;
+       LEFT JOIN contact_information AS con ON con.id = iso.contact_information;
 
 CREATE OR REPLACE VIEW wgs
        AS
@@ -223,3 +220,43 @@ LEFT JOIN extractions AS ext
 LEFT JOIN sequencing AS seq
        ON ext.id = seq.extraction_id;
 
+-- WGS, with library and extractions combined and wide-formed
+CREATE OR REPLACE VIEW wgs_wide 
+       AS
+SELECT wgs.isolate_id						  AS isolate_id, 
+       wgs.library_id						  AS user_library_id, 
+       wgs.experimental_protocol_field, 
+       ontology_full_term(wgs.experimental_specimen_role_type)	  AS experimental_specimen_role_type, 
+       wgs.nucleic_acid_extraction_method, 
+       wgs.nucleic_acid_extraction_kit, 
+       wgs.sample_volume_measurement_value, 
+       ontology_full_term(wgs.sample_storage_duration_unit)	  AS sample_storage_duration_unit, 
+       ontology_full_term(wgs.residual_sample_status)		  AS residual_sample_status, 
+       wgs.sample_storage_duration_value, 
+       ontology_full_term(wgs.sample_storage_duration_unit)	  AS sample_volume_measurement_unit,
+       wgs.nucleic_acid_storage_duration_value, 
+       ontology_full_term(wgs.nucleic_acid_storage_duration_unit) AS nucleic_acid_storage_duration_unit,
+       ontology_full_term(wgs.sequenced_by)			  AS sequenced_by,
+       con.contact_name						  AS sequenced_by_contact_name, 
+       con.contact_email					  AS sequenced_by_contact_email, 
+       con.laboratory_name					  AS sequenced_by_laboratory_name, 
+       wgs.sequencing_project_name, 
+       ontology_full_term(wgs.sequencing_platform)		  AS sequencing_platform, 
+       ontology_full_term(wgs.sequencing_instrument)		  AS sequencing_instrument, 
+       ontology_full_term(wgs.sequencing_assay_type)		  AS sequencing_assay_type, 
+       wgs.dna_fragment_length, 
+       ontology_full_term(wgs.genomic_target_enrichment_method)	  AS genomic_target_enrichment_method, 
+       wgs.genomic_target_enrichment_method_details, 
+       wgs.amplicon_pcr_primer_scheme, 
+       wgs.amplicon_size, 
+       wgs.sequencing_flow_cell_version, 
+       wgs.library_preparation_kit, 
+       wgs.sequencing_protocol, 
+       wgs.r1_fastq_filename, 
+       wgs.r2_fastq_filename, 
+       wgs.fast5_filename, 
+       wgs.assembly_filename, 
+       wgs.r1_irida_id, 
+       wgs.r2_irida_id
+  FROM wgs
+     LEFT JOIN contact_information AS con ON con.id = wgs.contact_information;
