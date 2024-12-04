@@ -70,3 +70,46 @@ FROM projects AS p
             ON s.project_id = p.id
      LEFT JOIN isolates AS i
             ON i.sample_id = s.id;
+
+CREATE OR REPLACE VIEW wgs
+       AS
+   SELECT wgs.isolate_id,
+          ext.id AS extraction_id,
+          seq.id AS sequencing_id,
+          seq.library_id,
+          ext.experimental_protocol_field,
+          ext.experimental_specimen_role_type,
+          ext.nucleic_acid_extraction_method,
+          ext.nucleic_acid_extraction_kit,
+          ext.sample_volume_measurement_value,
+          ext.sample_volume_measurement_unit,
+          ext.residual_sample_status,
+          ext.sample_storage_duration_value,
+          ext.sample_storage_duration_unit,
+          ext.nucleic_acid_storage_duration_value,
+          ext.nucleic_acid_storage_duration_unit,
+          seq.contact_information,
+          seq.sequenced_by,
+          seq.sequencing_project_name,
+          seq.sequencing_platform,
+          seq.sequencing_instrument,
+          seq.sequencing_assay_type,
+          seq.dna_fragment_length,
+          seq.genomic_target_enrichment_method,
+          seq.genomic_target_enrichment_method_details,
+          seq.amplicon_pcr_primer_scheme,
+          seq.amplicon_size,
+          seq.sequencing_flow_cell_version,
+          seq.library_preparation_kit,
+          seq.sequencing_protocol,
+          seq.r1_fastq_filename,
+          seq.r2_fastq_filename,
+          seq.fast5_filename,
+          seq.assembly_filename, 
+          seq.r1_irida_id,
+          seq.r2_irida_id
+     FROM wgs_extractions AS wgs
+LEFT JOIN extractions AS ext
+       ON wgs.extraction_id = ext.id 
+LEFT JOIN sequencing AS seq
+       ON ext.id = seq.extraction_id;
