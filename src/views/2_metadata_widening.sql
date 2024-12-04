@@ -1,29 +1,29 @@
 -- Collection information table, fully widened
 CREATE OR REPLACE VIEW collection_information_wide
 AS
-SELECT c.sample_id,
-       c.original_sample_description,
-       ontology_full_term(c.sample_collected_by)              AS sample_collected_by,
-       contacts.contact_name                                  AS sample_collector_contact_name,
-       contacts.contact_email                                 AS sample_collector_contact_email,
-       contacts.laboratory_name                               AS sample_collector_laboratory_name,
-       c.sample_collection_date,
-       ontology_full_term(c.sample_collection_date_precision) AS sample_collection_date_precision,
-       activities.vals                                        AS presamping_activity,
-       c.presampling_activity_details,
-       purposes.vals                                          AS purpose_of_samping,
-       c.sample_received_date,
-       ontology_full_term(c.specimen_processing)              AS specimen_processing,
-       c.sample_storage_method,
-       c.sample_storage_medium,
-       ontology_full_term(c.collection_device)                AS collection_device,
-       ontology_full_term(c.collection_method)                AS collection_method
+SELECT col.sample_id,
+       col.original_sample_description,
+       ontology_full_term(col.sample_collected_by)              AS sample_collected_by,
+       contacts.contact_name                                    AS sample_collector_contact_name,
+       contacts.contact_email                                   AS sample_collector_contact_email,
+       contacts.laboratory_name                                 AS sample_collector_laboratory_name,
+       col.sample_collection_date,
+       ontology_full_term(col.sample_collection_date_precision) AS sample_collection_date_precision,
+       activities.vals                                          AS presamping_activity,
+       col.presampling_activity_details,
+       purposes.vals                                            AS purpose_of_samping,
+       col.sample_received_date,
+       ontology_full_term(col.specimen_processing)              AS specimen_processing,
+       col.sample_storage_method,
+       col.sample_storage_medium,
+       ontology_full_term(col.collection_device)                AS collection_device,
+       ontology_full_term(col.collection_method)                AS collection_method
   FROM collection_information AS col
-       LEFT JOIN contact_information AS contacts ON contacts.id = c.contact_information
+       LEFT JOIN contact_information AS contacts ON contacts.id = col.contact_information
        LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('sample_activity')) AS activities
-	      ON activities.id = c.id
-       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('sample_purposes')) AS purposes 
-	      ON purposes.id = c.id
+	      ON activities.id = col.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('sample_purposes')) AS purposes
+	      ON purposes.id   = col.id
 ;
 
 -- Geographic location wide
