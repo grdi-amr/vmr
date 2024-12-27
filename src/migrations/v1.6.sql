@@ -19,7 +19,7 @@ INSERT INTO time_of_day (ontology_term_id) (SELECT id FROM terms_inserted);
 
 
 WITH terms_inserted AS (
-   INSERT INTO ontology_term (ontology_id, en_term, curated)
+   INSERT INTO ontology_terms (ontology_id, en_term, curated)
    VALUES   ('ENVO:06105300',    'Wastewater treatment process',          true),
             ('GENEPIO:0100881',  'Wastewater filtration',                 true),
             ('GENEPIO:0100882',  'Wastewater grit removal',               true),
@@ -30,7 +30,7 @@ WITH terms_inserted AS (
 INSERT INTO activities (ontology_term_id) (SELECT id FROM terms_inserted);
 
 WITH terms_inserted AS (
-   INSERT INTO ontology_term (ontology_id, en_term, curated)
+   INSERT INTO ontology_terms (ontology_id, en_term, curated)
    VALUES   ('ENVO:00000037',  'Ditch',                          true),
             ('ENVO:00000140',  'Drainage ditch',                 true),
             ('ENVO:00000139',  'Irrigation ditch',               true),
@@ -44,7 +44,7 @@ UPDATE ontology_terms SET ontology_id = 'ENVO:00003860' WHERE en_term = 'Pig man
 
 -- Add new terms to environemtal_materials, and also add the poultry litter term, which had not been added due to an ontology_term_id conflict.
 WITH terms_inserted AS (
-   INSERT INTO ontology_term (ontology_id, en_term, curated)
+   INSERT INTO ontology_terms (ontology_id, en_term, curated)
    VALUES   ('ENVO:00002044', 'Sludge',            true),
             ('ENVO:00002057', 'Primary sludge',    true),
             ('ENVO:00002058', 'Secondary sludge',  true),
@@ -67,7 +67,7 @@ ALTER TABLE environmental_data
    ADD COLUMN presampling_weather_conditions    text,
    ADD COLUMN precipitation_measurement_value   text,
    ADD COLUMN precipitation_measurement_unit    text,
-   ADD COLUMN precipitation_measurement_method  text
+   ADD COLUMN precipitation_measurement_method  text;
 
 ALTER TABLE sequencing RENAME COLUMN assembly_filename TO genome_sequence_filename;
 
