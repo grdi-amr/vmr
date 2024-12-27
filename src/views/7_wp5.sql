@@ -47,7 +47,7 @@ env.water_temperature,                      env.water_temperature_units,        
 env.sediment_depth_units,                   env.available_data_type_details,                env.available_data_types,
 env.animal_or_plant_population,             env.environmental_materials,                    env.environmental_material_constituent,
 env.environmental_sites,                    env.weather_type,                               ana.anatomical_region,
-env.sampling_weather_conditions,            env.presampling_weather_conditions,             env.precipitation_measurement_value 
+env.sampling_weather_conditions,            env.presampling_weather_conditions,             env.precipitation_measurement_value,
 env.precipitation_measurement_unit,         env.precipitation_measurement_method,
 -- Anatomical fields
 ana.body_product,                           ana.anatomical_material,                        ana.anatomical_part,
