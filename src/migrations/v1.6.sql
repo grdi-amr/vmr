@@ -66,7 +66,7 @@ ALTER TABLE environmental_data
    ADD COLUMN sampling_weather_conditions       text,
    ADD COLUMN presampling_weather_conditions    text,
    ADD COLUMN precipitation_measurement_value   text,
-   ADD COLUMN precipitation_measurement_unit    text,
+   ADD COLUMN precipitation_measurement_unit    int,
    ADD COLUMN precipitation_measurement_method  text;
 
 ALTER TABLE sequencing RENAME COLUMN assembly_filename TO genome_sequence_filename;
