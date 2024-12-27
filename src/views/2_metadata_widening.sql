@@ -225,7 +225,7 @@ SELECT wgs.isolate_id                                             AS isolate_id,
        wgs.r1_fastq_filename,
        wgs.r2_fastq_filename,
        wgs.fast5_filename,
-       wgs.assembly_filename,
+       wgs.genome_sequence_filename,
        wgs.r1_irida_id,
        wgs.r2_irida_id
   FROM wgs
