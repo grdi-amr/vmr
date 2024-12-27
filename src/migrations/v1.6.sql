@@ -62,12 +62,12 @@ ALTER TABLE collection_information
    ADD COLUMN sample_collection_time_duration_value int,
    ADD COLUMN sample_collection_time_duration_unit  int      REFERENCES duration_units(ontology_term_id);
 
-ALTER TABLE environmental_data 
-   ADD COLUMN sampling_weather_conditions,
-   ADD COLUMN presampling_weather_conditions,
-   ADD COLUMN precipitation_measurement_value,
-   ADD COLUMN precipitation_measurement_unit,
-   ADD COLUMN precipitation_measurement_method
+ALTER TABLE environmental_data
+   ADD COLUMN sampling_weather_conditions       text,
+   ADD COLUMN presampling_weather_conditions    text,
+   ADD COLUMN precipitation_measurement_value   text,
+   ADD COLUMN precipitation_measurement_unit    text,
+   ADD COLUMN precipitation_measurement_method  text
 
 ALTER TABLE sequencing RENAME COLUMN assembly_filename TO genome_sequence_filename;
 
