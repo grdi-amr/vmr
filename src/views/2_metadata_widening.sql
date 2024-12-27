@@ -8,16 +8,24 @@ SELECT col.sample_id,
        contacts.contact_email                                   AS sample_collector_contact_email,
        contacts.laboratory_name                                 AS sample_collector_laboratory_name,
        col.sample_collection_date,
+       col.sample_collection_end_date,
+       col.sample_collection_start_time,
+       col.sample_collection_end_time,
+       ontology_full_term(col.sample_collection_time_of_day)    AS sample_collection_time_of_day,
+       col.sample_collection_time_duration_value,
+       ontology_full_term(col.sample_collection_time_duration_unit) AS sample_collection_time_duration_units,
        ontology_full_term(col.sample_collection_date_precision) AS sample_collection_date_precision,
        activities.vals                                          AS presamping_activity,
        col.presampling_activity_details,
        purposes.vals                                            AS purpose_of_samping,
        col.sample_received_date,
        ontology_full_term(col.specimen_processing)              AS specimen_processing,
+       col.specimen_processing_details,
        col.sample_storage_method,
        col.sample_storage_medium,
        ontology_full_term(col.collection_device)                AS collection_device,
-       ontology_full_term(col.collection_method)                AS collection_method
+       ontology_full_term(col.collection_method)                AS collection_method,
+       col.sample_processing_date
   FROM collection_information AS col
        LEFT JOIN contact_information AS contacts ON contacts.id = col.contact_information
        LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('sample_activity')) AS activities
@@ -107,7 +115,12 @@ SELECT env.sample_id                                    AS sample_id,
        mat.vals                                         AS environmental_materials,
        mat_const.vals                                   AS environmental_material_constituent,
        site.vals                                        AS environmental_sites,
-       weather.vals                                     AS weather_type
+       weather.vals                                     AS weather_type,
+       sampling_weather_conditions,
+       presampling_weather_conditions,
+       precipitation_measurement_value,
+       ontology_full_term(precipitation_measurement_unit) AS precipitation_measurement_unit,
+       precipitation_measurement_method
   FROM environmental_data AS env
        LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('environmental_data_animal_plant')) AS animal_or_plant_pops
               ON animal_or_plant_pops.id = env.id
