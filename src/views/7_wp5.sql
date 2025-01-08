@@ -1,7 +1,8 @@
 CREATE OR REPLACE VIEW wgs_full_wide_metadata
     AS
 SELECT
-iso.user_isolate_id,                        iso.alternative_isolate_ids,
+iso.user_isolate_id,
+iso.alternative_isolate_ids,
 sam.sample_collector_sample_id,
 -- WGS fields
 wgs.user_library_id,

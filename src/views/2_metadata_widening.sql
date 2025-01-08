@@ -133,8 +133,6 @@ SELECT env.sample_id                                      AS sample_id,
               ON sample_weather.id = env.id
        LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('environmental_data_presampling_weather_conditions')) AS presample_weather
               ON presample_weather.id = env.id
-       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('environmental_data_weather_type')) AS weather
-              ON weather.id = env.id
        LEFT JOIN mat_const ON mat_const.id = env.id;
 
 -- Host table widening
