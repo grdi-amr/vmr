@@ -1,4 +1,4 @@
--- Update versioning table 
+-- Update versioning table
 INSERT INTO db_versions
 	(id, major_release, minor_release, script_name, grdi_template_version, date_applied)
 	VALUES (7, 1, 6, 'v1.6.sql', 'v13.3.4', CURRENT_DATE);
@@ -42,7 +42,7 @@ INSERT INTO environmental_sites (ontology_term_id) (SELECT id FROM terms_inserte
 -- Update Pig Manure term to have the correct Ontology ID
 UPDATE ontology_terms SET ontology_id = 'ENVO:00003860' WHERE en_term = 'Pig manure';
 
--- Add new terms to environemtal_materials, and also add the poultry litter term, which had not been added due to an ontology_term_id conflict.
+-- Add new terms to environmental_materials, and also add the poultry litter term, which had not been added due to an ontology_term_id conflict.
 WITH terms_inserted AS (
    INSERT INTO ontology_terms (ontology_id, en_term, curated)
    VALUES   ('ENVO:00002044', 'Sludge',            true),
@@ -62,12 +62,24 @@ ALTER TABLE collection_information
    ADD COLUMN sample_collection_time_duration_value int,
    ADD COLUMN sample_collection_time_duration_unit  int      REFERENCES duration_units(ontology_term_id);
 
+-- This rename is to accomodate the renaming of the field weather_type to sampling weather conditions
+ALTER TABLE environmental_data_weather_type RENAME TO environmental_data_sampling_weather_conditions;
+ALTER TABLE environmental_data_sampling_weather_conditions RENAME CONSTRAINT environmental_data_weather_type_id_fkey      TO environmental_data_sampling_weather_conditions_id_fkey;
+ALTER TABLE environmental_data_sampling_weather_conditions RENAME CONSTRAINT environmental_data_weather_type_term_id_fkey TO environmental_data_sampling_weather_conditions_term_id_fkey;
+
+-- Make a new multi-choice table for new column presampling_weather_conditions
+CREATE TABLE environmental_data_presampling_weather_conditions (
+   id      int4 NOT NULL REFERENCES environmental_data(id),
+   term_id int4 NOT NULL REFERENCES weather_types(ontology_term_id),
+   CONSTRAINT environmental_data_presampling_weather_conditions_pkey PRIMARY KEY (id, term_id)
+);
+
+-- Add new columns to the env data table
 ALTER TABLE environmental_data
-   ADD COLUMN sampling_weather_conditions       text,
-   ADD COLUMN presampling_weather_conditions    text,
    ADD COLUMN precipitation_measurement_value   text,
-   ADD COLUMN precipitation_measurement_unit    int,
+   ADD COLUMN precipitation_measurement_unit    int   REFERENCES depth_units(ontology_term_id),
    ADD COLUMN precipitation_measurement_method  text;
 
+-- Rename column
 ALTER TABLE sequencing RENAME COLUMN assembly_filename TO genome_sequence_filename;
 
