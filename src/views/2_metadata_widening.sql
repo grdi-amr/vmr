@@ -115,9 +115,8 @@ SELECT env.sample_id                                      AS sample_id,
        mat.vals                                           AS environmental_materials,
        mat_const.vals                                     AS environmental_material_constituent,
        site.vals                                          AS environmental_sites,
-       weather.vals                                       AS weather_type,
-       sampling_weather_conditions,
-       presampling_weather_conditions,
+       sample_weather.vals                                AS sampling_weather_conditions,
+       presample_weather.vals                             AS presampling_weather_conditions,
        precipitation_measurement_value,
        ontology_full_term(precipitation_measurement_unit) AS precipitation_measurement_unit,
        precipitation_measurement_method
@@ -130,6 +129,10 @@ SELECT env.sample_id                                      AS sample_id,
               ON mat.id = env.id
        LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('environmental_data_site')) AS site
               ON site.id = env.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('environmental_data_sampling_weather_conditions')) AS sample_weather
+              ON sample_weather.id = env.id
+       LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('environmental_data_presampling_weather_conditions')) AS presample_weather
+              ON presample_weather.id = env.id
        LEFT JOIN (SELECT id,vals FROM aggregate_multi_choice_table('environmental_data_weather_type')) AS weather
               ON weather.id = env.id
        LEFT JOIN mat_const ON mat_const.id = env.id;
