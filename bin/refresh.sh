@@ -1,6 +1,8 @@
-#!/bin/sh
-
-DB=$1
+#!/bin/bash
+echo -n "Enter psql password: "
+read -s PGPASSWORD
+echo \n
+export PGPASSWORD
 
 # A command to get all functions defined in public
 FUNCS=$(cat <<- 'EOF'
@@ -20,19 +22,20 @@ EOF
 )
 
 # Drop Views
-psql --quiet --dbname $DB --tuples-only --command "$VIEWS" | psql --quiet --dbname $DB
+psql "$@" --quiet --tuples-only --command "$VIEWS" | psql "$@" --quiet
 # Drop Functions
-psql --quiet --dbname $DB --tuples-only --command "$FUNCS" | psql --quiet --dbname $DB 
+psql "$@" --quiet --tuples-only --command "$FUNCS" | psql "$@" --quiet
 
 # Refresh functions
 for func in src/functions/*.sql
 do
-  psql --dbname $DB --file "$func"
+  psql "$@" --file "$func"
 done
 
 # Refresh views
 for view in src/views/*.sql
 do
-  psql --dbname $DB --file "$view"
+  psql "$@" --file "$view"
 done
 
+unset PGPASSWORD
