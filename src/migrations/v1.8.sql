@@ -6,7 +6,7 @@ DECLARE
     t text;
 BEGIN
     FOR t IN
-	(SELECT tablename FROM information_schema.tables WHERE table_schema = 'public' AND table_name != 'db_versions')
+	(SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != 'db_versions' AND table_type = 'BASE TABLE')
     LOOP
         EXECUTE format(
 	 'ALTER TABLE public.%I
@@ -14,7 +14,7 @@ BEGIN
 	        ADD COLUMN inserted_by text      NOT NULL DEFAULT current_user,
 	        ADD COLUMN updated_at  timestamp DEFAULT NULL,
 	        ADD COLUMN updated_by  text      DEFAULT NULL;
-	  CREATE TRIGGER update_usertimestamp 
+	  CREATE TRIGGER update_usertimestamp
 	         BEFORE UPDATE ON public.%I
                  FOR EACH ROW EXECUTE PROCEDURE trigger_set_usertimestamp()', t,t);
     END loop;
