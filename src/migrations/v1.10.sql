@@ -21,5 +21,11 @@ ALTER TABLE bioinf.virulence_vfdb        ALTER COLUMN sequencing_id SET NOT NULL
 ALTER TABLE bioinf.amr_mob_suite         ALTER COLUMN amr_genes_id  SET NOT NULL;
 
 -- Also adds a unique not null to the sample_plan_id of the projects TABLE
-ALTER TABLE projects ADD CONSTRAINT projects_sample_plan_id_key UNIQUE(sample_plan_id)
+ALTER TABLE projects ADD CONSTRAINT projects_sample_plan_id_key UNIQUE(sample_plan_id);
 ALTER TABLE projects ALTER COLUMN sample_plan_id SET NOT NULL;
+
+-- Set sample_collector_sample_id to be unique across the project
+ALTER TABLE samples ADD CONSTRAINT samples_sample_collector_sample_id_key UNIQUE(sample_collector_sample_id);
+
+-- Set isolate_id (user submitted) to be unique across the table
+ALTER TABLE isolates ADD CONSTRAINT isolates_isolate_id_key UNIQUE(isolate_id);
