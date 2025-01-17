@@ -19,3 +19,7 @@ ALTER TABLE bioinf.salmonella_serotyping ALTER COLUMN sequencing_id SET NOT NULL
 ALTER TABLE bioinf.virulence_vf          ALTER COLUMN sequencing_id SET NOT NULL;
 ALTER TABLE bioinf.virulence_vfdb        ALTER COLUMN sequencing_id SET NOT NULL;
 ALTER TABLE bioinf.amr_mob_suite         ALTER COLUMN amr_genes_id  SET NOT NULL;
+
+-- Also adds a unique not null to the sample_plan_id of the projects TABLE
+ALTER TABLE projects ADD CONSTRAINT projects_sample_plan_id_key UNIQUE(sample_plan_id)
+ALTER TABLE projects ALTER COLUMN sample_plan_id SET NOT NULL;
