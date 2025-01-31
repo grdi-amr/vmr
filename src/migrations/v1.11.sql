@@ -29,12 +29,12 @@ CREATE TABLE audit.logged_actions (
 	schema_name       text NOT NULL,
 	table_name text NOT NULL,
   relid oid   NOT NULL,
+  row_id int NOT NULL,
   session_user_name text  NOT NULL,
   action_tstamp_clk TIMESTAMP WITH TIME ZONE NOT NULL,
   application_name text,
   client_addr    inet,
   client_port    integer,
-  client_query   text,
   action      TEXT NOT NULL CHECK (action IN ('I','D','U', 'T')),
   row_data     hstore,
   previous_values  hstore,
@@ -45,47 +45,41 @@ DROP function if exists audit_if_modified_func;
 CREATE OR REPLACE FUNCTION audit.if_modified_func() RETURNS TRIGGER AS $body$
 DECLARE
     audit_row audit.logged_actions%ROWTYPE; --  Define a rowtype variable, which will be used to insert relevant information
-    old_row hstore := hstore(OLD.*);        -- This stores 
-    new_row hstore := hstore(NEW.*);
     excluded_cols text[] = ARRAY[]::text[];
+    old_row hstore := hstore(OLD.*) - excluded_cols;
+    new_row hstore := hstore(NEW.*) - excluded_cols;
 BEGIN
-    IF TG_WHEN <> 'AFTER' THEN
-        RAISE EXCEPTION 'audit.if_modified_func() may only run as an AFTER trigger';
+    -- Just raise error if trigger is accidently set to anything other then AFTER
+    IF TG_WHEN <> 'BEFORE' THEN
+        RAISE EXCEPTION 'audit.if_modified_func() may only run as a BEFORE trigger';
     END IF;
-    audit_row = ROW(
-        nextval('audit.logged_actions_event_id_seq'),
-        TG_TABLE_SCHEMA::text,                        -- schema_name
-        TG_TABLE_NAME::text,                          -- table_name
-        TG_RELID,                                     -- relation OID for much quicker searches
-        session_user::text,                           -- session_user_name
-        current_timestamp,                            -- action_tstamp_tx
-        current_setting('application_name'),          -- client application
-        inet_client_addr(),                           -- client_addr
-        inet_client_port(),                           -- client_port
-        current_query(),                              -- top-level query or queries (if multistatement) from client
-        substring(TG_OP,1,1),                         -- action
-        NULL, NULL,                                   -- row_data, changed_fields
-        'f'                                           -- statement_only
-        );
-    IF NOT TG_ARGV[0]::boolean IS DISTINCT FROM 'f'::boolean THEN
-        audit_row.client_query = NULL;
-    END IF;
-    IF TG_ARGV[1] IS NOT NULL THEN
+    -- Set the values of the audit row!
+    audit_row.event_id          = nextval('audit.logged_actions_event_id_seq');
+	  audit_row.schema_name       = TG_TABLE_SCHEMA::text;                        -- schema_nam
+	  audit_row.table_name        = TG_TABLE_NAME::text;                          -- table_name
+    audit_row.relid             = TG_RELID;                                    -- relation OID for much quicker searches
+    audit_row.session_user_name = session_user::text;                           -- session_user_name                                                  
+    audit_row.action_tstamp_clk = current_timestamp;                            -- action_tstamp_tx                                                   
+    audit_row.application_name  = current_setting('application_name');          -- client application                                                
+    audit_row.client_addr       = inet_client_addr();                           -- client_addr                                                  
+    audit_row.client_port       = inet_client_port();                           -- client_port                                                  
+    audit_row.action            = substring(TG_OP,1,1);                         -- action
+    audit_row.row_data          = NULL; 
+    audit_row.previous_values   = NULL;                                   -- row_data, changed_fields
+    audit_row.statement_only    = 'f';                                          -- statement_only                                                   
+
+    IF TG_ARGV[0] IS NOT NULL THEN
         excluded_cols = TG_ARGV[1]::text[];
     END IF;
-    IF (TG_OP = 'UPDATE' AND TG_LEVEL = 'ROW') THEN
-        audit_row.row_data = old_row - excluded_cols;
-        audit_row.changed_fields =  (audit_row.row_data - new_row) - excluded_cols;
-        IF audit_row.changed_fields = hstore('') THEN
+    IF (TG_OP = 'UPDATE') THEN
+        audit_row.row_data        = old_row
+        audit_row.previous_values = audit_row.row_data - new_row
+        IF audit_row.previous_values = hstore('') THEN
             -- All changed fields are ignored. Skip this update.
             RETURN NULL;
         END IF;
-    ELSIF (TG_OP = 'DELETE' AND TG_LEVEL = 'ROW') THEN
-        audit_row.row_data = hstore(OLD.*) - excluded_cols;
-    ELSIF (TG_OP = 'INSERT' AND TG_LEVEL = 'ROW') THEN
-        audit_row.row_data = hstore(NEW.*) - excluded_cols;
-    ELSIF (TG_LEVEL = 'STATEMENT' AND TG_OP IN ('INSERT','UPDATE','DELETE','TRUNCATE')) THEN
-        audit_row.statement_only = 't';
+    ELSIF (TG_OP = 'DELETE') THEN
+        audit_row.previous_values = old_row
     ELSE
         RAISE EXCEPTION '[audit.if_modified_func] - Trigger func added as trigger for unhandled case: %, %',TG_OP, TG_LEVEL;
         RETURN NULL;
@@ -98,8 +92,8 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = pg_catalog, public;
 DROP TRIGGER audit ON projects;
-CREATE TRIGGER audit AFTER INSERT OR UPDATE OR DELETE on projects FOR EACH ROW EXECUTE PROCEDURE audit.if_modified_func();
-update projects set project_name = 'Test Again' where id =4;
+CREATE TRIGGER audit BEFORE UPDATE OR DELETE on projects FOR EACH ROW EXECUTE PROCEDURE audit.if_modified_func();
+update projects set project_name = 'It is changed now' where id = 4;
 
 select * from audit.logged_actions;
 
