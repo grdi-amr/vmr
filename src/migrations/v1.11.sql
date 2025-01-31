@@ -36,9 +36,7 @@ CREATE TABLE audit.logged_actions (
   client_addr    inet,
   client_port    integer,
   action      TEXT NOT NULL CHECK (action IN ('I','D','U', 'T')),
-  row_data     hstore,
-  previous_values  hstore,
-  statement_only  boolean NOT NULL
+  previous_values  hstore
 );
 
 DROP function if exists audit_if_modified_func;
@@ -65,29 +63,28 @@ BEGIN
     audit_row.client_addr       = inet_client_addr();                           -- client_addr                                                  
     audit_row.client_port       = inet_client_port();                           -- client_port                                                  
     audit_row.action            = substring(TG_OP,1,1);                         -- action
-    audit_row.row_data          = NULL; 
     audit_row.previous_values   = NULL;                                   -- row_data, changed_fields
-    audit_row.statement_only    = 'f';                                          -- statement_only                                                   
     IF TG_ARGV[0] IS NOT NULL THEN
         excluded_cols = TG_ARGV[1]::text[];
     END IF;
     IF (TG_OP = 'UPDATE') THEN
-        audit_row.row_data        = old_row;
-        audit_row.previous_values = audit_row.row_data - new_row;
+        audit_row.previous_values = old_row - new_row;
         IF audit_row.previous_values = hstore('') THEN
             RAISE EXCEPTION 'Update on table % and row id % results in no change', TG_TABLE_NAME, OLD.id;
             RETURN NULL;
             -- If the update results in no changes, then say so
         END IF;
         NEW.was_updated := TRUE;
+        INSERT INTO audit.logged_actions VALUES (audit_row.*);
         RETURN NEW;
     ELSIF (TG_OP = 'DELETE') THEN
         audit_row.previous_values = old_row;
+        INSERT INTO audit.logged_actions VALUES (audit_row.*);
+        RETURN NULL;
     ELSE
         RAISE EXCEPTION '[audit.if_modified_func] - Trigger func added as trigger for unhandled case: %, %',TG_OP, TG_LEVEL;
         RETURN NULL;
     END IF;
-    INSERT INTO audit.logged_actions VALUES (audit_row.*);
 END;
 $body$
 LANGUAGE plpgsql
@@ -96,11 +93,13 @@ SET search_path = pg_catalog, public;
 DROP TRIGGER audit ON projects;
 CREATE TRIGGER audit BEFORE UPDATE OR DELETE on projects FOR EACH ROW EXECUTE PROCEDURE audit.if_modified_func();
 
-update projects set project_name = 'New project name 1' where id = 4;
+update projects set project_name = 'A brand new project name' where id = 4;
 
 select * from projects;
 
 select * from audit.logged_actions;
+
+delete from projects where id =4;
 
 alter tab
 
