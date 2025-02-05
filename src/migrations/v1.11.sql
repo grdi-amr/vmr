@@ -5,23 +5,6 @@ REVOKE ALL ON SCHEMA audit FROM public;
 
 COMMENT ON SCHEMA audit IS 'Out-of-table audit/history logging tables and trigger functions';
 
---
--- Audited data. Lots of information is available, it's just a matter of how much
--- you really want to record. See:
---
---   http://www.postgresql.org/docs/9.1/static/functions-info.html
---
--- Remember, every column you add takes up more audit table space and slows audit
--- inserts.
---
--- Every index you add has a big impact too, so avoid adding indexes to the
--- audit table unless you REALLY need them. The hstore GIST indexes are
--- particularly expensive.
---
--- It is sometimes worth copying the audit table, or a coarse subset of it that
--- you're interested in, into a temporary table where you CREATE any useful
--- indexes and do your analysis.
-
 DROP TABLE if exists audit.logged_actions;
 CREATE TABLE audit.logged_actions (
   event_id bigserial primary key,
@@ -44,7 +27,7 @@ DECLARE
     old_row       hstore := hstore(OLD.*) - excluded_cols;
     new_row       hstore := hstore(NEW.*) - excluded_cols;
 BEGIN
-    -- Just raise error if trigger is accidently set to anything other then AFTER
+    -- Just raise error if trigger is accidently set to anything other then BEFORE
     IF TG_WHEN <> 'BEFORE' THEN
         RAISE EXCEPTION 'audit.if_modified_func() may only run as a BEFORE trigger';
     END IF;
@@ -82,6 +65,7 @@ $body$
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = pg_catalog, public;
+
 DROP TRIGGER audit ON projects;
 CREATE TRIGGER audit BEFORE UPDATE OR DELETE on projects FOR EACH ROW EXECUTE PROCEDURE audit.if_modified_func();
 
