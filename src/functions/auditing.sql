@@ -4,17 +4,23 @@ DECLARE
     excluded_cols text[] := ARRAY[]::text[];
     old_row       hstore := hstore(OLD.*) - excluded_cols;
     new_row       hstore := hstore(NEW.*) - excluded_cols;
+    row_id        int;
 BEGIN
     -- Just raise error if trigger is accidently set to anything other then BEFORE
     IF TG_WHEN <> 'BEFORE' THEN
         RAISE EXCEPTION 'audit.if_modified_func() may only run as a BEFORE trigger';
+    END IF;
+    IF TG_NARGS = 0 THEN
+        audit_row.row_id = OLD.id;
+    ELSE
+        EXECUTE format('SELECT %I FROM $1', TG_ARGV[0]) USING OLD INTO row_id;
+        audit_row.row_id = row_id;
     END IF;
     -- Set the values of the audit row!
     audit_row.event_id          = nextval('audit.logged_actions_event_id_seq');
     audit_row.schema_name       = TG_TABLE_SCHEMA::text;
     audit_row.table_name        = TG_TABLE_NAME::text;
     audit_row.relid             = TG_RELID;
-    audit_row.row_id            = OLD.id;
     audit_row.session_user_name = session_user::text;
     audit_row.action_timestamp  = current_timestamp;
     audit_row.application_name  = current_setting('application_name');
