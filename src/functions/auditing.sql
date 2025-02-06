@@ -1,14 +1,3 @@
-CREATE FUNCTION trigger_set_usertimestamp()
-RETURNS trigger
-AS $$
-    BEGIN
-        NEW.updated_at := current_timestamp;
-        NEW.updated_by := current_user;
-        RETURN NEW;
-    END;
-$$
-LANGUAGE plpgsql;
-
 DROP function if exists audit_if_modified_func;
 CREATE OR REPLACE FUNCTION audit.if_modified_func() RETURNS TRIGGER AS $body$
 DECLARE
