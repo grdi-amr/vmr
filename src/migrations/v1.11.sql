@@ -34,12 +34,10 @@ BEGIN
 	        DROP COLUMN updated_by,
           ADD  COLUMN was_updated bool DEFAULT FALSE;
 	  CREATE TRIGGER audit_changes_to_ext_table
-	         BEFORE UPDATE ON public.%I
+	         BEFORE UPDATE OR DELETE ON public.%I
                  FOR EACH ROW EXECUTE PROCEDURE audit.if_modified_func()', table_name,table_name);
     END loop;
 END;
 $$ language 'plpgsql';
-DROP TRIGGER audit ON projects;
-CREATE TRIGGER audit BEFORE UPDATE OR DELETE on projects FOR EACH ROW EXECUTE PROCEDURE audit.if_modified_func();
 
 
