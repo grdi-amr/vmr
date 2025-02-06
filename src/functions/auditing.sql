@@ -29,10 +29,9 @@ BEGIN
     audit_row.previous_values   = NULL;
     IF (TG_OP = 'UPDATE') THEN
         audit_row.previous_values = old_row - new_row;
-        IF audit_row.previous_values = hstore('') THEN
+        IF audit_row.previous_values = hstore('') THEN -- If the update results in no changes, then say so
             RAISE EXCEPTION 'Update on table % and row id % results in no change', TG_TABLE_NAME, OLD.id;
             RETURN NULL;
-            -- If the update results in no changes, then say so
         END IF;
         INSERT INTO audit.logged_actions VALUES (audit_row.*);
         NEW.was_updated := TRUE;
