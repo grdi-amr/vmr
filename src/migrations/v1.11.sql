@@ -7,7 +7,6 @@ CREATE SCHEMA audit;
 REVOKE ALL ON SCHEMA audit FROM public;
 COMMENT ON SCHEMA audit IS 'Out-of-table audit/history logging tables and trigger functions';
 
-DROP TABLE if exists audit.logged_actions;
 CREATE TABLE audit.logged_actions (
   event_id bigserial primary key,
   schema_name       text NOT NULL,
