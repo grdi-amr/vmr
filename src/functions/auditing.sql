@@ -10,10 +10,11 @@ BEGIN
     IF TG_WHEN <> 'BEFORE' THEN
         RAISE EXCEPTION 'audit.if_modified_func() may only run as a BEFORE trigger';
     END IF;
-    IF TG_NARGS = 0 THEN
+    -- This IF-ELSE simply retrieves the right id from the table being worked on.
+    IF TG_NARGS = 0 THEN -- If no paramter is passed, assume that the row_id is simply "id"
         audit_row.row_id = OLD.id;
-    ELSE
-        EXECUTE format('SELECT %I FROM $1', TG_ARGV[0]) USING OLD INTO row_id;
+    ELSE -- If there is no "id" column in the table, then we must pass the id to log as a parameter to the trigger.
+        EXECUTE format('SELECT $1.%I', TG_ARGV[0]) USING OLD INTO row_id;
         audit_row.row_id = row_id;
     END IF;
     -- Set the values of the audit row!
