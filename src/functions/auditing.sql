@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION audit.if_modified_func() RETURNS TRIGGER AS $body$
+CREATE OR REPLACE FUNCTION audit.log_changes() RETURNS TRIGGER AS $body$
 DECLARE
     audit_row audit.logged_actions%ROWTYPE; --  Define a rowtype variable, which will be used to insert relevant information
     excluded_cols text[] := ARRAY[]::text[];

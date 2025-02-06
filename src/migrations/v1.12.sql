@@ -16,7 +16,7 @@ BEGIN
 	  DROP trigger update_usertimestamp ON public.%I;
 	  CREATE TRIGGER audit_changes_to_ext_table
 	         BEFORE UPDATE OR DELETE ON public.%I
-                 FOR EACH ROW EXECUTE PROCEDURE audit.if_modified_func()', tablename,tablename,tablename);
+                 FOR EACH ROW EXECUTE PROCEDURE audit.log_changes()', tablename,tablename,tablename);
     END loop;
 END;
 $$ language 'plpgsql';
