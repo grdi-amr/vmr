@@ -3,9 +3,9 @@ INSERT INTO db_versions (major_release, minor_release, script_name, grdi_templat
 
 DO $$
 DECLARE
-    table_name text;
+    tablename text;
 BEGIN
-    FOR table_name IN
+    FOR tablename IN
 	(SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != 'db_versions' AND table_type = 'BASE TABLE')
     LOOP
         EXECUTE format(
@@ -13,9 +13,10 @@ BEGIN
 	        DROP COLUMN updated_at,
 	        DROP COLUMN updated_by,
           ADD  COLUMN was_updated bool DEFAULT FALSE;
+	  DROP trigger update_usertimestamp ON public.%I;
 	  CREATE TRIGGER audit_changes_to_ext_table
 	         BEFORE UPDATE OR DELETE ON public.%I
-                 FOR EACH ROW EXECUTE PROCEDURE audit.if_modified_func()', table_name,table_name);
+                 FOR EACH ROW EXECUTE PROCEDURE audit.if_modified_func()', tablename,tablename,tablename);
     END loop;
 END;
 $$ language 'plpgsql';
