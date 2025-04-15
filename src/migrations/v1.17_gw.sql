@@ -64,7 +64,7 @@ CREATE TABLE bioinf.mob_rgi (
     mash_nearest_neighbor TEXT,
     mash_neighbor_distance FLOAT,
     mash_neighbor_identification TEXT,
-    repetitive_dna_id TEXT, 
+    repetitive_dna_id TEXT,
     repetitive_dna_type TEXT,
     filtering_reason TEXT
 );
