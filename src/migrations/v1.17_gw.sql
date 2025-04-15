@@ -1,3 +1,6 @@
+INSERT INTO db_versions (major_release, minor_release, script_name, grdi_template_version, date_applied, note)
+   VALUES (1,17,'v1.17_gw.sql', 'v14.5.4', CURRENT_DATE, 'Changes schema bioinf to be more generic; adds new tables for new tools');
+
 DROP TABLE IF EXISTS
   bioinf.amr_relaxase_type,
   bioinf.amr_ref_type,
@@ -35,7 +38,7 @@ CREATE TABLE bioinf.mob_rgi (
     predicted_protein TEXT,
     card_protein_sequence TEXT,
     percentage_length_of_reference_sequence FLOAT,
-    id TEXT,
+    hsp_id TEXT,
     model_id TEXT,
     nudged TEXT,
     note TEXT,
@@ -61,10 +64,9 @@ CREATE TABLE bioinf.mob_rgi (
     mash_nearest_neighbor TEXT,
     mash_neighbor_distance FLOAT,
     mash_neighbor_identification TEXT,
-    repetitive_dna_id TEXT,
+    repetitive_dna_id TEXT, 
     repetitive_dna_type TEXT,
     filtering_reason TEXT
-    
 );
 
 CREATE TABLE bioinf.kleborate (
@@ -72,14 +74,13 @@ CREATE TABLE bioinf.kleborate (
     sequencing_id int4 REFERENCES sequencing(id),
     species TEXT,
     species_match TEXT,
-    
+    --- QC
     contig_count INT,
     N50 INT,
     largest_contig INT,
     total_size BIGINT,
     ambiguous_bases TEXT,
     QC_warnings TEXT,
-
     -- MLST: oxytoca & pneumo
     mlst_ST TEXT,
     clonal_complex TEXT,
@@ -90,7 +91,6 @@ CREATE TABLE bioinf.kleborate (
     phoE TEXT,
     rpoB TEXT,
     tonB TEXT,
-
     -- Yersiniabactin
     YbST TEXT,
     Yersiniabactin TEXT,
@@ -106,7 +106,6 @@ CREATE TABLE bioinf.kleborate (
     ybtE TEXT,
     fyuA TEXT,
     spurious_ybt_hits TEXT,
-
     -- Colibactin
     CbST TEXT,
     Colibactin TEXT,
@@ -126,7 +125,6 @@ CREATE TABLE bioinf.kleborate (
     clbP TEXT,
     clbQ TEXT,
     spurious_clb_hits TEXT,
-
     -- Aerobactin
     AbST TEXT,
     Aerobactin TEXT,
@@ -136,7 +134,6 @@ CREATE TABLE bioinf.kleborate (
     iucD TEXT,
     iutA TEXT,
     spurious_abst_hits TEXT,
-
     -- Salmochelin
     SmST TEXT,
     Salmochelin TEXT,
@@ -145,7 +142,6 @@ CREATE TABLE bioinf.kleborate (
     iroD TEXT,
     iroN TEXT,
     spurious_smst_hits TEXT,
-
     -- RmpADC
     RmST TEXT,
     RmpADC TEXT,
@@ -153,13 +149,10 @@ CREATE TABLE bioinf.kleborate (
     rmpD TEXT,
     rmpC TEXT,
     spurious_rmst_hits TEXT,
-
     rmpA2 TEXT,
-
     -- Virulence score (only for pneumoniae)
     virulence_score TEXT,
     spurious_virulence_hits TEXT,
-
     -- AMR (only for pneumoniae)
     AGly_acquired TEXT,
     Col_acquired TEXT,
@@ -189,10 +182,10 @@ CREATE TABLE bioinf.island_path (
     sequencing_id int4 REFERENCES sequencing(id),
     start_position INT,
     end_position INT
+);
 
-  }
-CREATE TABLE bioinf.integron_finder_results (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE bioinf.integron_finder (
+    id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     sequencing_id int4 REFERENCES sequencing(id),
     id_replicon TEXT NOT NULL,         -- e.g., contig00001
     calin INTEGER NOT NULL,            -- number of CALINs
@@ -200,21 +193,21 @@ CREATE TABLE bioinf.integron_finder_results (
     in0 INTEGER NOT NULL,              -- number of In0 elements
     topology TEXT NOT NULL,
     size INTEGER NOT NULL              -- contig size
-)
+);
 
-  CREATE TABLE bioinf.digis_elements (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE bioinf.digis_elements (
+    id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     sequencing_id int4 REFERENCES sequencing(id),
     seqid TEXT,                   -- e.g., contig00001
     source TEXT,                  -- e.g., digIS
-    type TEXT,                    -- e.g., transposable_element
-    start INTEGER,                -- start position
-    end INTEGER,                  -- end position
+    "type" TEXT,                    -- e.g., transposable_element
+    "start" INTEGER,                -- start position
+    "end" INTEGER,                  -- end position
     score FLOAT,                  -- similarity score (e.g., 0.99)
-    strand CHAR(1),               -- '+' or '-'
+    strand TEXT CHECK (strand IN ('+', '-')),
     phase TEXT,                   -- usually '.', can be NULL
     element_id TEXT,              -- parsed from attributes: ID
-    level TEXT,                   -- parsed from attributes: level (e.g., is, orf)
+    "level" TEXT,                   -- parsed from attributes: level (e.g., is, orf)
     qid TEXT,                     -- parsed from attributes: qID
     qstart INTEGER,              -- parsed from attributes
     qend INTEGER,                -- parsed from attributes
@@ -226,35 +219,36 @@ CREATE TABLE bioinf.integron_finder_results (
 );
 
 CREATE TABLE bioinf.iceberg_blastn_genome (
-    id SERIAL PRIMARY KEY,
+    id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     sequencing_id int4 REFERENCES sequencing(id),
-    sequence TEXT,               -- contig name
-    start INTEGER,
-    end INTEGER,
-    strand CHAR(1),
+    "sequence" TEXT,               -- contig name
+    "start" INTEGER,
+    "end" INTEGER,
+    strand TEXT CHECK (strand IN ('+', '-')),
     iceberg_id TEXT,
     coverage_range TEXT,         -- e.g., '108695-109468/133500'
     gaps TEXT,                   -- e.g., '1/1'
     percent_coverage FLOAT,
     percent_identity FLOAT,
-    database TEXT,               -- e.g., 'ICEberg'
+    "database" TEXT,               -- e.g., 'ICEberg'
     accession TEXT,              -- e.g., 'AL513382'
     product TEXT,                -- e.g., 'SPI-7'
     description TEXT             -- full description of the hit
 );
+
 CREATE TABLE bioinf.iceberg_blastp_genes (
-    id SERIAL PRIMARY KEY,
+    id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     sequencing_id int4 REFERENCES sequencing(id),
-    sequence TEXT,               -- gene name
-    start INTEGER,
-    end INTEGER,
-    strand CHAR(1),
+    "sequence" TEXT,               -- gene name
+    "start" INTEGER,
+    "end" INTEGER,
+    strand TEXT CHECK (strand IN ('+', '-')),
     iceberg_id TEXT,
     coverage_range TEXT,         -- e.g., '1-259/259'
     gaps TEXT,                   -- e.g., '0/0'
     percent_coverage FLOAT,
     percent_identity FLOAT,
-    database TEXT,               -- e.g., 'ICEberg'
+    "database" TEXT,               -- e.g., 'ICEberg'
     accession TEXT,              -- e.g., 'CAF28558.1'
     product TEXT,                -- short product name
     description TEXT             -- full description of the hit
