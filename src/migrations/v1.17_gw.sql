@@ -190,9 +190,9 @@ CREATE TABLE bioinf.kleborate (
     O_locus_identity TEXT,
     O_missing_expected_genes TEXT,
     --other results
-    score__resistance_score TEXT,
-    class_count__num_resistance_classes INT,
-    gene_count__num_resistance_genes INT
+    resistance_score TEXT,
+    num_resistance_classes INT,
+    num_resistance_genes INT
     
 );
 
