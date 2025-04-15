@@ -175,6 +175,25 @@ CREATE TABLE bioinf.kleborate (
     SHV_mutations TEXT,
     Omp_mutations TEXT,
     Col_mutations TEXT
+    --klebsiella complex
+    wzi TEXT,
+    K_locus TEXT,
+    K_type TEXT,
+    K_locus_confidence TEXT,
+    K_locus_problems TEXT,
+    K_locus_identity TEXT,
+    K_missing_expected_genes TEXT,
+    O_locus TEXT,
+    O_type TEXT,
+    O_locus_confidence TEXT,
+    O_locus_problems TEXT,
+    O_locus_identity TEXT,
+    O_missing_expected_genes TEXT,
+    --other results
+    score__resistance_score TEXT,
+    class_count__num_resistance_classes INT,
+    gene_count__num_resistance_genes INT
+    
 );
 
 CREATE TABLE bioinf.island_path (
