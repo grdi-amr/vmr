@@ -193,7 +193,6 @@ CREATE TABLE bioinf.kleborate (
     resistance_score TEXT,
     num_resistance_classes INT,
     num_resistance_genes INT
-    
 );
 
 CREATE TABLE bioinf.island_path (
