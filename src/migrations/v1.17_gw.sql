@@ -174,7 +174,7 @@ CREATE TABLE bioinf.kleborate (
     Bla_chr TEXT,
     SHV_mutations TEXT,
     Omp_mutations TEXT,
-    Col_mutations TEXT
+    Col_mutations TEXT,
     --klebsiella complex
     wzi TEXT,
     K_locus TEXT,
