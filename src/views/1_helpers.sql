@@ -30,6 +30,19 @@ UNION ALL
     FROM alternative_isolate_ids as a
 ORDER BY isolate_id;
 
+CREATE VIEW possible_sample_names
+AS
+  SELECT sam.id                             AS sample_id,
+         sam.sample_collector_sample_id     AS user_sample_id,
+         'Assigned as main sample ID'::text AS note
+    FROM samples AS sam
+UNION ALL
+  SELECT alt.sample_id,
+         alt.alternative_sample_id AS user_sample_id,
+         alt.note
+    FROM alternative_sample_ids AS alt
+ORDER BY sample_id;
+
 CREATE VIEW alt_iso_wide 
 AS
   SELECT isolate_id, 
