@@ -64,6 +64,31 @@ LEFT JOIN projects_samples_isolates AS psi ON psi.isolate_id = wgs.isolate_id
     WHERE library_id IS NOT NULL;
 
 
+CREATE VIEW kleb_view
+AS
+SELECT  iso.irida_sample_id::text,
+       prov.region,
+              extract(year FROM col.sample_collection_date) AS collection_year,
+          iso.organism,
+          iso.user_isolate_id,
+          wgs.user_library_id,
+         host.host_common_name,
+         host.host_scientific_name,
+          env.environmental_materials,
+          env.environmental_sites,
+         food.food_product,
+          ana.body_product,
+          ana.anatomical_part
+     FROM wgs_wide AS wgs
+LEFT JOIN isolates_wide          AS iso   ON iso.isolate_id = wgs.isolate_id
+LEFT JOIN geo_loc                AS geo   ON geo.sample_id  = iso.sample_id
+LEFT JOIN env_data_wide          AS env   ON env.sample_id  = iso.sample_id
+LEFT JOIN food_data_wide         AS food  ON food.sample_id = iso.sample_id
+LEFT JOIN hosts_wide             AS host  ON host.sample_id = iso.sample_id
+LEFT JOIN anatomical_data_wide   AS ana   ON ana.sample_id  = iso.sample_id
+LEFT JOIN collection_information AS col   ON col.sample_id  = iso.sample_id
+LEFT JOIN state_province_regions AS prov  ON prov.id        = geo.state_province_region
+;
 
 
 
