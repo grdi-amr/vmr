@@ -1,7 +1,5 @@
 INSERT INTO db_versions (major_release, minor_release, script_name, grdi_template_version, date_applied, note)
-   VALUES (2,0,'v1.2.sql', 'v14.5.4', CURRENT_DATE, 'Simplifies the sample metadata tables into a single table');
-
-BEGIN;
+   VALUES (2,0,'v2.00.sql', 'v14.5.4', CURRENT_DATE, 'Simplifies the sample metadata tables into a single table');
 
 -- New Big table for the metadata!
 CREATE TABLE sample_metadata (
@@ -64,8 +62,6 @@ CREATE TABLE sample_metadata (
 );
 
 -- Before we change the other tables, we must insert the existing data:
-rollback; 
-BEGIN;
 INSERT INTO sample_metadata
    SELECT sam.id,
           sam.project_id,
@@ -140,9 +136,52 @@ LEFT JOIN risk_assessment        AS risk   ON risk.sample_id = sam.id
 alter table sample_metadata alter column id add generated always as identity;
 -- Set it to the correct value
 select setval(pg_get_serial_sequence('sample_metadata', 'id'), max(id)) from sample_metadata;
+-- Add the audit TRIGGER
+CREATE TRIGGER audit_changes_to_ext_table BEFORE UPDATE OR DELETE ON sample_metadata FOR EACH ROW EXECUTE PROCEDURE audit.log_changes();
 
-insert into sample_metadata (project_id, sample_collector_sample_id) values (1, 'test boi');
+DO $$
+DECLARE x record;
+BEGIN
+   FOR x IN (
+      SELECT tc.constraint_name,
+             tc.table_name,
+             kcu.column_name,
+             ccu.table_name AS meta_table,
+             ccu.column_name AS foreign_column_name 
+        FROM information_schema.table_constraints       AS tc
+        JOIN information_schema.key_column_usage        AS kcu  ON tc.constraint_name  = kcu.constraint_name
+                                                               AND tc.table_schema     = kcu.table_schema
+        JOIN information_schema.constraint_column_usage AS ccu  ON ccu.constraint_name = tc.constraint_name
+       WHERE tc.constraint_type = 'FOREIGN KEY'
+         AND ccu.table_name   IN ('food_data', 'environmental_data', 'anatomical_data', 'risk_assessment', 'collection_information')
+      )
+   LOOP
+      -- Add the sample_id column
+      EXECUTE format('ALTER TABLE public.%I ADD COLUMN sample_id integer REFERENCES sample_metadata(id);', x.table_name);
+      -- I don't want to log these changes, so drop the trigger
+      EXECUTE format('DROP TRIGGER audit_changes_to_ext_table ON public.%I', x.table_name);
+      -- Here, add the sample_ids
+      EXECUTE format('UPDATE %I SET sample_id = %I.sample_id FROM %I where %I.id = %I.id', x.table_name, x.meta_table, x.meta_table, x.meta_table, x.table_name);
+      -- Remove the old id column
+      EXECUTE format('ALTER TABLE public.%I DROP COLUMN id CASCADE', x.table_name);
+      -- Re-add the primary key
+      EXECUTE format('ALTER TABLE public.%I ADD PRIMARY KEY (sample_id, term_id)', x.table_name);
+      -- Re-add the trigger
+      EXECUTE format('CREATE TRIGGER audit_changes_to_ext_table BEFORE UPDATE OR DELETE ON public.%I FOR EACH ROW EXECUTE PROCEDURE audit.log_changes(sample_id)', x.table_name);
+   END LOOP;
+END;
+$$ language 'plpgsql';
 
-
+-- Drop those old nasty tables
+drop table collection_information CASCADE;
+drop table environmental_data CASCADE;
+drop table hosts CASCADE;
+drop table host_breeds CASCADE;
+drop table host_diseases;
+drop table geo_loc CASCADE;
+drop table geo_loc_name_sites;
+drop table anatomical_data CASCADE;
+drop table food_data CASCADE;
+drop table risk_assessment CASCADE;
 
 
