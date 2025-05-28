@@ -1,7 +1,11 @@
 CREATE OR REPLACE FUNCTION bind_ontology(term text, ont_id text) RETURNS text
 AS $$
-  BEGIN 
-    RETURN concat(term, ' [', ont_id, ']');
+  BEGIN
+    IF   (term IS NULL OR ont_id IS NULL)
+      THEN RETURN NULL;
+    ELSE
+      RETURN concat(term, ' [', ont_id, ']');
+    END IF;
   END;
 $$ LANGUAGE plpgsql;
 
