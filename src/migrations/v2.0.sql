@@ -173,15 +173,29 @@ END;
 $$ language 'plpgsql';
 
 -- Drop those old nasty tables
-drop table collection_information CASCADE;
-drop table environmental_data CASCADE;
-drop table hosts CASCADE;
-drop table host_breeds CASCADE;
-drop table host_diseases;
-drop table geo_loc CASCADE;
-drop table geo_loc_name_sites;
-drop table anatomical_data CASCADE;
-drop table food_data CASCADE;
-drop table risk_assessment CASCADE;
+DROP TABLE collection_information CASCADE;
+DROP TABLE environmental_data CASCADE;
+DROP TABLE hosts CASCADE;
+DROP TABLE host_breeds CASCADE;
+DROP TABLE host_diseases;
+DROP TABLE geo_loc CASCADE;
+DROP TABLE geo_loc_name_sites;
+DROP TABLE anatomical_data CASCADE;
+DROP TABLE food_data CASCADE;
+DROP TABLE risk_assessment CASCADE;
 
+-- Since we are removing the main sample table - 
+-- we need to remove and re-add the key constraints on the relevant tables
+-- isolates
+ALTER TABLE isolates                DROP CONSTRAINT isolates_sample_id_fkey;
+ALTER TABLE isolates                ADD  CONSTRAINT isolates_sample_id_fkey                 FOREIGN KEY (sample_id) REFERENCES sample_metadata(id);
+-- alternative
+ALTER TABLE alternative_sample_ids  DROP CONSTRAINT alternative_sample_ids_sample_id_fkey;
+ALTER TABLE alternative_sample_ids  ADD  CONSTRAINT alternative_sample_ids_sample_id_fkey   FOREIGN KEY (sample_id) REFERENCES sample_metadata(id);
+-- meta extractions
+ALTER TABLE metagenomic_extractions DROP CONSTRAINT metagenomic_extractions_sample_id_fkey;
+ALTER TABLE metagenomic_extractions ADD  CONSTRAINT metagenomic_extractions_sample_id_fkey  FOREIGN KEY (sample_id) REFERENCES sample_metadata(id);
+-- Rename the table
+DROP TABLE samples CASCADE;
+ALTER TABLE sample_metadata RENAME TO samples;
 
