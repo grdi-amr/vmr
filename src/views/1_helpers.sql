@@ -1,23 +1,19 @@
-CREATE VIEW foreign_keys 
-AS 
-SELECT    
-	tc.table_schema,      
-	tc.constraint_name, 
-	tc.table_name, 
-	kcu.column_name, 
-	ccu.table_schema AS foreign_table_schema,
-	ccu.table_name AS foreign_table_name,
-	ccu.column_name AS foreign_column_name 
-FROM information_schema.table_constraints AS tc 
-JOIN information_schema.key_column_usage AS kcu
-    ON tc.constraint_name = kcu.constraint_name
-    AND tc.table_schema = kcu.table_schema
-JOIN information_schema.constraint_column_usage AS ccu
-    ON ccu.constraint_name = tc.constraint_name
-WHERE tc.constraint_type = 'FOREIGN KEY'
-    AND tc.table_schema='public';
+CREATE OR REPLACE VIEW foreign_keys
+AS
+SELECT tc.table_schema,
+       tc.constraint_name,
+       tc.table_name,
+       kcu.column_name,
+       ccu.table_schema AS foreign_table_schema,
+       ccu.table_name   AS foreign_table_name,
+       ccu.column_name  AS foreign_column_name
+  FROM information_schema.table_constraints       AS tc
+  JOIN information_schema.key_column_usage        AS kcu ON tc.constraint_name  = kcu.constraint_name
+                                                        AND tc.table_schema     = kcu.table_schema
+  JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name
+ WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema='public';
 
-CREATE VIEW possible_isolate_names
+CREATE OR REPLACE VIEW possible_isolate_names
 AS
   SELECT i.id AS isolate_id,
          i.isolate_id AS isolate_collector_id,
@@ -30,7 +26,7 @@ UNION ALL
     FROM alternative_isolate_ids as a
 ORDER BY isolate_id;
 
-CREATE VIEW possible_sample_names
+CREATE OR REPLACE VIEW possible_sample_names
 AS
   SELECT sam.id                             AS sample_id,
          sam.sample_collector_sample_id     AS user_sample_id,
@@ -43,46 +39,44 @@ UNION ALL
     FROM alternative_sample_ids AS alt
 ORDER BY sample_id;
 
-CREATE VIEW alt_iso_wide 
+CREATE OR REPLACE VIEW alt_iso_wide
 AS
-  SELECT isolate_id, 
+  SELECT isolate_id,
 	 string_agg(alternative_isolate_id, '; ') AS alt_isolate_names
-    FROM alternative_isolate_ids 
+    FROM alternative_isolate_ids
 GROUP BY isolate_id;
 
-CREATE OR REPLACE VIEW projects_samples_isolates 
+CREATE OR REPLACE VIEW projects_samples_isolates
 AS
-SELECT p.id AS project_id, 
-       p.sample_plan_id, 
-       p.sample_plan_name,
-       p.project_name,
-       p.description,
-       s.id AS sample_id, 
-       s.sample_collector_sample_id AS sample_collector_sample_id,
-       i.id AS isolate_id,
-       i.isolate_id AS user_isolate_id, 
-       i.biosample_id AS BioSample_accession,
-       i.bioproject_id AS BioProject_accession,
-       i.irida_project_id,
-       i.irida_sample_id,
-       i.organism,
-       i.strain,
-       i.microbiological_method,
-       i.progeny_isolate_id,
-       i.isolated_by,
-       i.contact_information,
-       i.isolation_date,
-       i.isolate_received_date,
-       i.taxonomic_identification_process,
-       i.taxonomic_identification_process_details,
-       i.serovar,
-       i.serotyping_method,
-       i.phagetype
-FROM projects AS p
-     LEFT JOIN samples AS s 
-            ON s.project_id = p.id
-     LEFT JOIN isolates AS i
-            ON i.sample_id = s.id;
+SELECT pro.id                         AS project_id,
+       pro.sample_plan_id,
+       pro.sample_plan_name,
+       pro.project_name,
+       pro.description,
+       sam.id                         AS sample_id,
+       sam.sample_collector_sample_id AS sample_collector_sample_id,
+       iso.id                         AS isolate_id,
+       iso.isolate_id                 AS user_isolate_id,
+       iso.biosample_id               AS BioSample_accession,
+       iso.bioproject_id              AS BioProject_accession,
+       iso.irida_project_id,
+       iso.irida_sample_id,
+       iso.organism,
+       iso.strain,
+       iso.microbiological_method,
+       iso.progeny_isolate_id,
+       iso.isolated_by,
+       iso.contact_information,
+       iso.isolation_date,
+       iso.isolate_received_date,
+       iso.taxonomic_identification_process,
+       iso.taxonomic_identification_process_details,
+       iso.serovar,
+       iso.serotyping_method,
+       iso.phagetype
+  FROM projects      AS pro
+  LEFT JOIN samples  AS sam ON sam.project_id = pro.id
+  LEFT JOIN isolates AS iso ON iso.sample_id  = sam.id;
 
 CREATE OR REPLACE VIEW wgs
        AS
@@ -122,7 +116,6 @@ CREATE OR REPLACE VIEW wgs
           seq.r1_irida_id,
           seq.r2_irida_id
      FROM wgs_extractions AS wgs
-LEFT JOIN extractions AS ext
-       ON wgs.extraction_id = ext.id 
-LEFT JOIN sequencing AS seq
-       ON ext.id = seq.extraction_id;
+LEFT JOIN extractions     AS ext ON wgs.extraction_id = ext.id
+LEFT JOIN sequencing      AS seq ON ext.id            = seq.extraction_id;
+
