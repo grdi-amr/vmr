@@ -1,5 +1,6 @@
 CREATE OR REPLACE VIEW wgs_full_wide_metadata
     AS
+
 SELECT
 iso.user_isolate_id,
 iso.alternative_isolate_ids,
@@ -89,11 +90,11 @@ col.sample_collection_time_of_day,
 col.sample_collection_time_duration_value,
 col.sample_collection_time_duration_unit,
 --Geo fields
-geo.country,
-geo.state_province_region,
-geo.latitude,
-geo.longitude,
-geo.geo_loc_site,
+geo.geo_loc_country,
+geo.geo_loc_state_province_region,
+geo.geo_loc_latitude,
+geo.geo_loc_longitude,
+geo.geo_loc_name_site,
 --Env fields
 env.air_temperature,
 env.air_temperature_units,
