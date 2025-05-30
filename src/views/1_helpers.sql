@@ -97,6 +97,7 @@ CREATE OR REPLACE VIEW wgs
           ext.nucleic_acid_storage_duration_unit,
           seq.contact_information,
           seq.sequenced_by,
+          seq.sequencing_date,
           seq.sequencing_project_name,
           seq.sequencing_platform,
           seq.sequencing_instrument,

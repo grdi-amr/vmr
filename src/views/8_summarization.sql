@@ -1,4 +1,4 @@
-CREATE VIEW n_sam_iso_seq 
+CREATE VIEW n_sam_iso_seq
 AS
 SELECT COUNT(DISTINCT(psi.project_id))    AS n_projects,
        COUNT(DISTINCT(psi.sample_id))     AS n_samples,
@@ -27,7 +27,7 @@ n_seq AS (
          n_isolates,
          COALESCE(n_seqs, 0) AS n_seqs
     FROM n_iso
-    FULL JOIN n_seq ON n_iso.scientific_name = n_seq.scientific_name 
+    FULL JOIN n_seq ON n_iso.scientific_name = n_seq.scientific_name
 ORDER BY n_isolates DESC;
 
 CREATE VIEW all_possible_ids
@@ -63,33 +63,24 @@ LEFT JOIN projects_samples_isolates AS psi ON psi.sample_id = sam.sample_id
 LEFT JOIN projects_samples_isolates AS psi ON psi.isolate_id = wgs.isolate_id
     WHERE library_id IS NOT NULL;
 
-
 CREATE VIEW kleb_view
 AS
 SELECT  iso.irida_sample_id::text,
        prov.region,
-              extract(year FROM col.sample_collection_date) AS collection_year,
-          iso.organism,
-          iso.user_isolate_id,
-          wgs.user_library_id,
-         host.host_common_name,
-         host.host_scientific_name,
-          env.environmental_materials,
-          env.environmental_sites,
-         food.food_product,
-          ana.body_product,
-          ana.anatomical_part
+            extract(year FROM sam.sample_collection_date) AS collection_year,
+        iso.organism,
+        iso.user_isolate_id,
+        wgs.user_library_id,
+       wide.host_common_name,
+       wide.host_scientific_name,
+       wide.environmental_materials,
+       wide.environmental_sites,
+       wide.food_product,
+       wide.body_product,
+       wide.anatomical_part
      FROM wgs_wide AS wgs
 LEFT JOIN isolates_wide          AS iso   ON iso.isolate_id = wgs.isolate_id
-LEFT JOIN geo_loc                AS geo   ON geo.sample_id  = iso.sample_id
-LEFT JOIN env_data_wide          AS env   ON env.sample_id  = iso.sample_id
-LEFT JOIN food_data_wide         AS food  ON food.sample_id = iso.sample_id
-LEFT JOIN hosts_wide             AS host  ON host.sample_id = iso.sample_id
-LEFT JOIN anatomical_data_wide   AS ana   ON ana.sample_id  = iso.sample_id
-LEFT JOIN collection_information AS col   ON col.sample_id  = iso.sample_id
-LEFT JOIN state_province_regions AS prov  ON prov.id        = geo.state_province_region
-;
-
-
-
+LEFT JOIN samples                AS sam   ON sam.id         = iso.sample_id
+LEFT JOIN state_province_regions AS prov  ON prov.id        = sam.geo_loc_state_province_region
+LEFT JOIN full_sample_metadata   AS wide  ON wide.sample_id = sam.id;
 

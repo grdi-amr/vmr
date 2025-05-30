@@ -1,7 +1,19 @@
--- Collection information table, fully widened
-CREATE OR REPLACE VIEW collection_information_wide
+-- Full widened sample metadata
+CREATE OR REPLACE VIEW full_sample_metadata
 AS
-SELECT sam.id                                                       AS sample_id,
+WITH mat_const AS (
+  SELECT sample_id,
+         string_agg(term_id, '; ') AS vals
+    FROM environmental_data_material_constituents
+GROUP BY sample_id
+)
+SELECT sam.id                          AS sample_id,
+       sam.sample_collector_sample_id,
+       pro.project_name,
+       pro.description                 AS project_description,
+       pro.sample_plan_id,
+       pro.sample_plan_name,
+       -- Collection Information
        sam.original_sample_description,
        ontology_full_term(sam.sample_collected_by)                  AS sample_collected_by,
        contacts.contact_name                                        AS sample_collector_contact_name,
@@ -25,70 +37,29 @@ SELECT sam.id                                                       AS sample_id
        sam.sample_storage_medium,
        ontology_full_term(sam.collection_device)                    AS collection_device,
        ontology_full_term(sam.collection_method)                    AS collection_method,
-       sam.sample_processing_date
-  FROM samples                                              AS sam
-  LEFT JOIN contact_information                             AS contacts   ON contacts.id          = sam.contact_information
-  LEFT JOIN aggregate_multi_choice_table('sample_activity') AS activities ON activities.sample_id = sam.id
-  LEFT JOIN aggregate_multi_choice_table('sample_purposes') AS purposes   ON purposes.sample_id   = sam.id
-;
-
--- Geographic location wide
-CREATE OR REPLACE VIEW geo_loc_wide
-AS
-SELECT sam.id                                       AS sample_id,
-       bind_ontology(cnt.en_term, cnt.ontology_id)  AS geo_loc_country,
-       bind_ontology(sta.en_term, sta.ontology_id)  AS geo_loc_state_province_region,
+       sam.sample_processing_date,
+       -- Geographical information
+       bind_ontology(cnt.en_term, cnt.ontology_id) AS geo_loc_country,
+       bind_ontology(sta.en_term, sta.ontology_id) AS geo_loc_state_province_region,
        sam.geo_loc_latitude,
        sam.geo_loc_longitude,
-       sam.geo_loc_name_site                        AS geo_loc_name_site
-  FROM samples                     AS sam
-  LEFT JOIN countries              AS cnt  ON cnt.id = sam.geo_loc_country
-  LEFT JOIN state_province_regions AS sta  ON sta.id = sam.geo_loc_state_province_region;
-
--- Anatomical data wide
-CREATE OR REPLACE VIEW anatomical_data_wide
-AS
-SELECT sam.id                                    AS sample_id,
+       sam.geo_loc_name_site                       AS geo_loc_name_site,
+       -- Anatomical information
        ontology_full_term(sam.anatomical_region) AS anatomical_region,
        body.vals                                 AS body_product,
        material.vals                             AS anatomical_material,
-       part.vals                                 AS anatomical_part
-  FROM samples                                                            AS sam
-       LEFT JOIN aggregate_multi_choice_table('anatomical_data_body')     AS body     ON     body.sample_id = sam.id
-       LEFT JOIN aggregate_multi_choice_table('anatomical_data_material') AS material ON material.sample_id = sam.id
-       LEFT JOIN aggregate_multi_choice_table('anatomical_data_part')     AS part     ON     part.sample_id = sam.id;
-
--- Food data wide
-CREATE OR REPLACE VIEW food_data_wide
-AS
-SELECT sam.id                                                 AS sample_id,
-       bind_ontology(countries.en_term, countries.en_term)    AS food_product_origin_country,
-       ontology_full_term(sam.food_product_production_stream) AS food_product_production_stream,
+       part.vals                                 AS anatomical_part,
+       --  Food information
+       bind_ontology(food_origin.en_term, food_origin.ontology_id) AS food_product_origin_country,
+       ontology_full_term(sam.food_product_production_stream)      AS food_product_production_stream,
        sam.food_packaging_date,
        sam.food_quality_date,
-       claims.vals                                            AS label_claim,
-       packaging.vals                                         AS food_packaging,
-       products.vals                                          AS food_product,
-       properties.vals                                        AS food_product_properties,
-       sources.vals                                           AS animal_source_of_food
-  FROM samples AS sam
-  LEFT JOIN countries                                                                ON  countries.id        = sam.food_product_origin_country
-  LEFT JOIN aggregate_multi_choice_table('food_data_label_claims')     AS claims     ON     claims.sample_id = sam.id
-  LEFT JOIN aggregate_multi_choice_table('food_data_packaging')        AS packaging  ON  packaging.sample_id = sam.id
-  LEFT JOIN aggregate_multi_choice_table('food_data_product')          AS products   ON   products.sample_id = sam.id
-  LEFT JOIN aggregate_multi_choice_table('food_data_product_property') AS properties ON properties.sample_id = sam.id
-  LEFT JOIN aggregate_multi_choice_table('food_data_source')           AS sources    ON    sources.sample_id = sam.id;
-
--- Environmental data wide
-CREATE OR REPLACE VIEW env_data_wide
-AS
-WITH mat_const AS (
-  SELECT sample_id,
-         string_agg(term_id, '; ') AS vals
-    FROM environmental_data_material_constituents
-GROUP BY sample_id
-)
-SELECT sam.id                                             AS sample_id,
+       claims.vals                                                 AS label_claim,
+       packaging.vals                                              AS food_packaging,
+       products.vals                                               AS food_product,
+       properties.vals                                             AS food_product_properties,
+       sources.vals                                                AS animal_source_of_food,
+       -- Environemntal data
        sam.air_temperature,
        ontology_full_term(sam.air_temperature_units)      AS air_temperature_units,
        sam.water_depth,
@@ -107,31 +78,47 @@ SELECT sam.id                                             AS sample_id,
        presample_weather.vals                             AS presampling_weather_conditions,
        precipitation_measurement_value,
        ontology_full_term(precipitation_measurement_unit) AS precipitation_measurement_unit,
-       precipitation_measurement_method
-  FROM samples                                                                                     AS sam
-       LEFT JOIN aggregate_multi_choice_table('environmental_data_animal_plant')                   AS aniplant          ON          aniplant.sample_id = sam.id
-       LEFT JOIN aggregate_multi_choice_table('environmental_data_available_data_type')            AS avail_type        ON        avail_type.sample_id = sam.id
-       LEFT JOIN aggregate_multi_choice_table('environmental_data_material')                       AS mat               ON               mat.sample_id = sam.id
-       LEFT JOIN aggregate_multi_choice_table('environmental_data_site')                           AS site              ON              site.sample_id = sam.id
-       LEFT JOIN aggregate_multi_choice_table('environmental_data_sampling_weather_conditions')    AS sample_weather    ON    sample_weather.sample_id = sam.id
-       LEFT JOIN aggregate_multi_choice_table('environmental_data_presampling_weather_conditions') AS presample_weather ON presample_weather.sample_id = sam.id
-       LEFT JOIN mat_const                                                                                              ON         mat_const.sample_id = sam.id;
-
--- Host table widening
-CREATE OR REPLACE VIEW hosts_wide
-AS
-SELECT sam.id                                              AS sample_id,
+       precipitation_measurement_method,
+       -- Host information
        bind_ontology(org.en_common_name,  org.ontology_id) AS host_common_name,
        bind_ontology(org.scientific_name, org.ontology_id) AS host_scientific_name,
        sam.host_ecotype,
        sam.host_breed,
-       ontology_full_term(sam.host_food_production_name) AS host_food_production_name,
+       ontology_full_term(sam.host_food_production_name)   AS host_food_production_name,
        sam.host_disease,
-       ontology_full_term(sam.host_age_bin)              AS host_age_bin,
-       bind_ontology(cnt.en_term, cnt.ontology_id)       AS host_origin_geo_loc_name_country
-  FROM samples                  AS sam
-       LEFT JOIN host_organisms AS org ON org.id = sam.host_organism
-       LEFT JOIN countries      AS cnt ON cnt.id = sam.host_origin_geo_loc_name_country;
+       ontology_full_term(sam.host_age_bin)                AS host_age_bin,
+       bind_ontology(cnt.en_term, cnt.ontology_id)         AS host_origin_geo_loc_name_country
+  FROM samples       AS sam
+  LEFT JOIN projects AS pro ON pro.id = sam.project_id
+       -- collection tables
+  LEFT JOIN contact_information                             AS contacts   ON   contacts.id        = sam.contact_information
+  LEFT JOIN aggregate_multi_choice_table('sample_activity') AS activities ON activities.sample_id = sam.id
+  LEFT JOIN aggregate_multi_choice_table('sample_purposes') AS purposes   ON   purposes.sample_id = sam.id
+       -- geo tables
+  LEFT JOIN countries              AS cnt ON cnt.id = sam.geo_loc_country
+  LEFT JOIN state_province_regions AS sta ON sta.id = sam.geo_loc_state_province_region
+       -- Anatomical tables
+  LEFT JOIN aggregate_multi_choice_table('anatomical_data_body')     AS body     ON     body.sample_id = sam.id
+  LEFT JOIN aggregate_multi_choice_table('anatomical_data_material') AS material ON material.sample_id = sam.id
+  LEFT JOIN aggregate_multi_choice_table('anatomical_data_part')     AS part     ON     part.sample_id = sam.id
+      -- Food tables
+  LEFT JOIN countries                                                  AS food_origin ON food_origin.id        = sam.food_product_origin_country
+  LEFT JOIN aggregate_multi_choice_table('food_data_label_claims')     AS claims      ON      claims.sample_id = sam.id
+  LEFT JOIN aggregate_multi_choice_table('food_data_packaging')        AS packaging   ON   packaging.sample_id = sam.id
+  LEFT JOIN aggregate_multi_choice_table('food_data_product')          AS products    ON    products.sample_id = sam.id
+  LEFT JOIN aggregate_multi_choice_table('food_data_product_property') AS properties  ON  properties.sample_id = sam.id
+  LEFT JOIN aggregate_multi_choice_table('food_data_source')           AS sources     ON     sources.sample_id = sam.id
+     -- Environmental data
+  LEFT JOIN aggregate_multi_choice_table('environmental_data_animal_plant')                   AS aniplant          ON          aniplant.sample_id = sam.id
+  LEFT JOIN aggregate_multi_choice_table('environmental_data_available_data_type')            AS avail_type        ON        avail_type.sample_id = sam.id
+  LEFT JOIN aggregate_multi_choice_table('environmental_data_material')                       AS mat               ON               mat.sample_id = sam.id
+  LEFT JOIN aggregate_multi_choice_table('environmental_data_site')                           AS site              ON              site.sample_id = sam.id
+  LEFT JOIN aggregate_multi_choice_table('environmental_data_sampling_weather_conditions')    AS sample_weather    ON    sample_weather.sample_id = sam.id
+  LEFT JOIN aggregate_multi_choice_table('environmental_data_presampling_weather_conditions') AS presample_weather ON presample_weather.sample_id = sam.id
+  LEFT JOIN mat_const                                                                                              ON         mat_const.sample_id = sam.id
+       -- host info
+  LEFT JOIN host_organisms AS org      ON      org.id = sam.host_organism
+  LEFT JOIN countries      AS host_cnt ON host_cnt.id = sam.host_origin_geo_loc_name_country;
 
 -- Isolate table in wide form
 CREATE OR REPLACE VIEW isolates_wide
@@ -181,6 +168,7 @@ SELECT wgs.isolate_id                                             AS isolate_id,
        wgs.nucleic_acid_storage_duration_value,
        ontology_full_term(wgs.nucleic_acid_storage_duration_unit) AS nucleic_acid_storage_duration_unit,
        ontology_full_term(wgs.sequenced_by)                       AS sequenced_by,
+       wgs.sequencing_date,
        con.contact_name                                           AS sequenced_by_contact_name,
        con.contact_email                                          AS sequenced_by_contact_email,
        con.laboratory_name                                        AS sequenced_by_laboratory_name,
@@ -204,3 +192,4 @@ SELECT wgs.isolate_id                                             AS isolate_id,
        wgs.r2_irida_id
   FROM wgs
   LEFT JOIN contact_information AS con ON con.id = wgs.contact_information;
+
