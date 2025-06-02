@@ -141,6 +141,6 @@ sam.food_product_properties,
 sam.animal_source_of_food
 FROM
 wgs_wide AS wgs
-  LEFT JOIN isolates_wide               AS iso ON iso.isolate_id  = wgs.isolate_id
-  LEFT JOIN full_sample_metadata        AS sam ON sam.sample_id   = iso.sample_id
+  LEFT JOIN isolates_wide        AS iso ON iso.isolate_id  = wgs.isolate_id
+  LEFT JOIN full_sample_metadata AS sam ON sam.sample_id   = iso.sample_id;
 
