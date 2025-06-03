@@ -9,6 +9,7 @@ GROUP BY sample_id
 )
 SELECT sam.id                          AS sample_id,
        sam.sample_collector_sample_id,
+       alt.alternative_sample_ids,
        pro.project_name                AS sample_collection_project_name,
        pro.description                 AS project_description,
        pro.sample_plan_id,
@@ -90,6 +91,8 @@ SELECT sam.id                          AS sample_id,
        bind_ontology(cnt.en_term, cnt.ontology_id)         AS host_origin_geo_loc_name_country
   FROM samples       AS sam
   LEFT JOIN projects AS pro ON pro.id = sam.project_id
+  -- Alternative sample ids!
+  LEFT JOIN alt_sample_wide AS alt ON alt.sample_id = sam.id
        -- collection tables
   LEFT JOIN contact_information                             AS contacts   ON   contacts.id        = sam.contact_information
   LEFT JOIN aggregate_multi_choice_table('sample_activity') AS activities ON activities.sample_id = sam.id

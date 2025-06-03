@@ -46,6 +46,13 @@ AS
     FROM alternative_isolate_ids
 GROUP BY isolate_id;
 
+CREATE OR REPLACE VIEW alt_sample_wide
+AS
+  SELECT sample_id,
+	 string_agg(alternative_sample_id, '; ') AS alternative_sample_ids
+    FROM alternative_sample_ids
+GROUP BY sample_id;
+
 CREATE OR REPLACE VIEW projects_samples_isolates
 AS
 SELECT pro.id                         AS project_id,
