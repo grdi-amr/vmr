@@ -81,6 +81,6 @@ SELECT  iso.irida_sample_id::text,
      FROM wgs_wide AS wgs
 LEFT JOIN isolates_wide          AS iso   ON iso.isolate_id = wgs.isolate_id
 LEFT JOIN samples                AS sam   ON sam.id         = iso.sample_id
-LEFT JOIN state_province_regions AS prov  ON prov.id        = sam.geo_loc_state_province_region
+LEFT JOIN state_province_regions AS prov  ON prov.id        = sam.geo_loc_name_state_province_region
 LEFT JOIN full_sample_metadata   AS wide  ON wide.sample_id = sam.id;
 

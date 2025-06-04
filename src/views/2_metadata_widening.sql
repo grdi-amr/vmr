@@ -98,14 +98,14 @@ SELECT sam.id                          AS sample_id,
   LEFT JOIN aggregate_multi_choice_table('sample_activity') AS activities ON activities.sample_id = sam.id
   LEFT JOIN aggregate_multi_choice_table('sample_purposes') AS purposes   ON   purposes.sample_id = sam.id
        -- geo tables
-  LEFT JOIN countries              AS cnt ON cnt.id = sam.geo_loc_country
-  LEFT JOIN state_province_regions AS sta ON sta.id = sam.geo_loc_state_province_region
+  LEFT JOIN countries              AS cnt ON cnt.id = sam.geo_loc_name_country
+  LEFT JOIN state_province_regions AS sta ON sta.id = sam.geo_loc_name_state_province_region
        -- Anatomical tables
   LEFT JOIN aggregate_multi_choice_table('anatomical_data_body')     AS body     ON     body.sample_id = sam.id
   LEFT JOIN aggregate_multi_choice_table('anatomical_data_material') AS material ON material.sample_id = sam.id
   LEFT JOIN aggregate_multi_choice_table('anatomical_data_part')     AS part     ON     part.sample_id = sam.id
       -- Food tables
-  LEFT JOIN countries                                                  AS food_origin ON food_origin.id        = sam.food_product_origin_country
+  LEFT JOIN countries                                                  AS food_origin ON food_origin.id        = sam.food_product_origin_geo_loc_name_country
   LEFT JOIN aggregate_multi_choice_table('food_data_label_claims')     AS claims      ON      claims.sample_id = sam.id
   LEFT JOIN aggregate_multi_choice_table('food_data_packaging')        AS packaging   ON   packaging.sample_id = sam.id
   LEFT JOIN aggregate_multi_choice_table('food_data_product')          AS products    ON    products.sample_id = sam.id

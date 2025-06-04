@@ -39,8 +39,8 @@ AS
 SELECT sam.id                                      AS sample_id,
        concat_ws(':', cnt.en_term, states.en_term) AS geo_loc_name
   FROM samples                     AS sam
-  LEFT JOIN countries              AS cnt    ON sam.geo_loc_country               = cnt.id
-  LEFT JOIN state_province_regions AS states ON sam.geo_loc_state_province_region = states.id;
+  LEFT JOIN countries              AS cnt    ON sam.geo_loc_name_country               = cnt.id
+  LEFT JOIN state_province_regions AS states ON sam.geo_loc_name_state_province_region = states.id;
 
 CREATE VIEW ohe.host_organism
 AS
@@ -220,12 +220,12 @@ SELECT iso.id                                                 AS isolate_id,
        pack.vals                                              AS food_contain_wrap,
        sam.food_quality_date
   FROM isolates AS iso
-  LEFT JOIN samples                                             AS sam     ON                          sam.id =       iso.sample_id
-  LEFT JOIN countries                                                      ON sam.food_product_origin_country = countries.id
-  LEFT JOIN aggregate_multi_choice_table('food_data_source')    AS source  ON                          sam.id =    source.sample_id
-  LEFT JOIN ohe.food_process_and_preserve                       AS proc    ON                          sam.id =      proc.sample_id
-  LEFT JOIN aggregate_multi_choice_table('food_data_product')   AS product ON                          sam.id =   product.sample_id
-  LEFT JOIN aggregate_multi_choice_table('food_data_packaging') AS pack    ON                          sam.id =      pack.sample_id;
+  LEFT JOIN samples                                             AS sam     ON                                       sam.id =       iso.sample_id
+  LEFT JOIN countries                                                      ON sam.food_product_origin_geo_loc_name_country = countries.id
+  LEFT JOIN aggregate_multi_choice_table('food_data_source')    AS source  ON                                       sam.id =    source.sample_id
+  LEFT JOIN ohe.food_process_and_preserve                       AS proc    ON                                       sam.id =      proc.sample_id
+  LEFT JOIN aggregate_multi_choice_table('food_data_product')   AS product ON                                       sam.id =   product.sample_id
+  LEFT JOIN aggregate_multi_choice_table('food_data_packaging') AS pack    ON                                       sam.id =      pack.sample_id;
 
 CREATE VIEW ohe.fac_type_and_local_scale
 AS
