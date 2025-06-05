@@ -88,7 +88,13 @@ SELECT sam.id                          AS sample_id,
        ontology_full_term(sam.host_food_production_name)   AS host_food_production_name,
        sam.host_disease,
        ontology_full_term(sam.host_age_bin)                AS host_age_bin,
-       bind_ontology(cnt.en_term, cnt.ontology_id)         AS host_origin_geo_loc_name_country
+       bind_ontology(cnt.en_term, cnt.ontology_id)         AS host_origin_geo_loc_name_country,
+       -- Risk Management
+       prevalence_metrics,
+       prevalence_metrics_details,
+       stage_of_production,
+       risk_activity.vals                                  AS experimental_intervention,
+       experimental_intervention_details
   FROM samples       AS sam
   LEFT JOIN projects AS pro ON pro.id = sam.project_id
   -- Alternative sample ids!
@@ -121,7 +127,9 @@ SELECT sam.id                          AS sample_id,
   LEFT JOIN mat_const                                                                                              ON         mat_const.sample_id = sam.id
        -- host info
   LEFT JOIN host_organisms AS org      ON      org.id = sam.host_organism
-  LEFT JOIN countries      AS host_cnt ON host_cnt.id = sam.host_origin_geo_loc_name_country;
+  LEFT JOIN countries      AS host_cnt ON host_cnt.id = sam.host_origin_geo_loc_name_country
+       -- Risk Management
+  LEFT JOIN aggregate_multi_choice_table('risk_activity') AS risk_activity ON risk_activity.sample_id = sam.id;
 
 -- Isolate table in wide form
 CREATE OR REPLACE VIEW isolates_wide
