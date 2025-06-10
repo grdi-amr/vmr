@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW foreign_keys
+CREATE MATERIALIZED VIEW foreign_keys
 AS
 SELECT tc.table_schema,
        tc.constraint_name,
@@ -12,6 +12,14 @@ SELECT tc.table_schema,
                                                         AND tc.table_schema     = kcu.table_schema
   JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name
  WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema='public';
+
+CREATE VIEW ontology_columns
+AS
+select table_name, column_name from foreign_keys where foreign_table_name IN (SELECT table_name FROM foreign_keys WHERE foreign_table_name = 'ontology_terms');
+
+CREATE VIEW country_cols
+AS
+select table_name, column_name from foreign_keys where foreign_table_name = 'countries' AND table_name <> 'state_province_regions';
 
 CREATE OR REPLACE VIEW possible_isolate_names
 AS
