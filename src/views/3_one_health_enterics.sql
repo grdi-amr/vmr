@@ -26,12 +26,11 @@ SELECT iso.id                                   AS isolate_id,
        iso.isolate_id                           AS sample_name,
        sam.id                                   AS sample_id,
        seq.bioproject_accession,
-       COALESCE(strains.strain, iso.isolate_id) AS strain,
+       COALESCE(iso.strain, iso.isolate_id)     AS strain,
        alt_iso_wide.alt_isolate_names           AS isolate_name_alias
   FROM isolates                     AS iso
        LEFT JOIN samples            AS sam ON iso.sample_id             = sam.id
        LEFT JOIN ohe.wgs_by_isolate AS seq ON iso.id                    = seq.isolate_id
-       LEFT JOIN strains                   ON iso.id                    = strains.id
        LEFT JOIN alt_iso_wide              ON alt_iso_wide.isolate_id   = iso.id;
 
 CREATE VIEW ohe.country_state

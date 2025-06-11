@@ -138,6 +138,7 @@ SELECT iso.id                                                   AS isolate_id,
        iso.sample_id                                            AS sample_id,
        iso.isolate_id                                           AS user_isolate_id,
        alt.alt_isolate_names                                    AS alternative_isolate_ids,
+       iso.strain,
        bind_ontology(org.scientific_name, org.ontology_id)      AS organism,
        iso.microbiological_method,
        iso.progeny_isolate_id,
@@ -159,7 +160,6 @@ SELECT iso.id                                                   AS isolate_id,
   FROM isolates                       AS iso
        LEFT JOIN alt_iso_wide         AS alt ON alt.isolate_id = iso.id
        LEFT JOIN microbes             AS org ON org.id         = iso.organism
-       LEFT JOIN strains              AS str ON str.id         = iso.strain
        LEFT JOIN contact_information  AS con ON con.id         = iso.contact_information;
 
 -- WGS, with library and extractions combined and wide-formed

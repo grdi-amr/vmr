@@ -1,4 +1,4 @@
-CREATE MATERIALIZED VIEW foreign_keys
+CREATE MATERIALIZED VIEW IF NOT EXISTS foreign_keys
 AS
 SELECT tc.table_schema,
        tc.constraint_name,
@@ -12,6 +12,8 @@ SELECT tc.table_schema,
                                                         AND tc.table_schema     = kcu.table_schema
   JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name
  WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema='public';
+
+REFRESH MATERIALIZED VIEW foreign_keys;
 
 CREATE VIEW ontology_columns
 AS
