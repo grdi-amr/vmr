@@ -1,7 +1,6 @@
 INSERT INTO db_versions (major_release, minor_release, script_name, grdi_template_version, date_applied, note)
    VALUES (2,5,'v2.05.sql', 'v14.5.4', CURRENT_DATE, 'Brings strains table into its own column');
 
-begin;
 drop view projects_samples_isolates cascade;
 drop view isolates_wide cascade;
 alter table isolates drop constraint isolates_strain_fkey;
