@@ -137,3 +137,13 @@ CREATE OR REPLACE VIEW wgs
 LEFT JOIN extractions     AS ext ON wgs.extraction_id = ext.id
 LEFT JOIN sequencing      AS seq ON ext.id            = seq.extraction_id;
 
+CREATE OR REPLACE VIEW latest_version
+AS
+SELECT major_release || '.' || LPAD(minor_release::text, 2, '0') AS db_ver,
+       grdi_template_version                                     AS template_ver,
+       date_applied,
+       note
+  FROM db_versions
+  ORDER BY major_release DESC,
+           minor_release DESC LIMIT 1;
+
