@@ -69,7 +69,7 @@ SELECT iso.id                     AS "isolate_id",
   LEFT JOIN samples                AS sam     ON sam.id             = iso.sample_id
   LEFT JOIN pbi.simple_contacts    AS contact ON contact.contact_id = sam.contact_information
   LEFT JOIN microbes               AS org     ON org.id             = iso.organism
-  LEFT JOIN source_type            AS src     ON src.sample_id      = iso.sample_id
+  LEFT JOIN pbi.source_type        AS src     ON src.sample_id      = iso.sample_id
   LEFT JOIN state_province_regions AS reg     ON reg.id             = sam.geo_loc_name_state_province_region
  WHERE irida_sample_id IS NOT NULL;
 
