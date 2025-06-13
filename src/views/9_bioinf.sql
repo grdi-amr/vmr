@@ -99,12 +99,12 @@ LEFT JOIN host_organisms AS org ON org.id = src.host_organism;
 
 CREATE VIEW pbi.isolates_with_irida
 AS
-SELECT iso.id                     AS "isolate_id",
-       org.scientific_name        AS "Assigned Organism",
-       src.source_type            AS "Source Type",
-       sam.sample_collection_date AS "Collection Year",
-       reg.en_term                AS "Province",
-       contact.contact            AS "Contact"
+SELECT iso.id          AS isolate_id,
+       org.scientific_name,
+       src.source_type,
+       sam.sample_collection_date,
+       reg.en_term     AS province,
+       contact.contact AS contact_information
   FROM isolates AS iso
   LEFT JOIN samples                AS sam     ON sam.id             = iso.sample_id
   LEFT JOIN pbi.simple_contacts    AS contact ON contact.contact_id = sam.contact_information
@@ -116,11 +116,11 @@ SELECT iso.id                     AS "isolate_id",
 CREATE VIEW pbi.mob_rgi
 AS
 SELECT pbi.isolate_id,
-       pbi."Assigned Organism",
-       pbi."Source Type",
-       pbi."Collection Year",
-       pbi."Province",
-       pbi."Contact",
+       pbi.scientific_name,
+       pbi.source_type,
+       pbi.sample_collection_date,
+       pbi.province,
+       pbi.contact_information,
        wgs.sequencing_id,
        mob.cut_off,
        mob.best_hit_aro,
@@ -135,4 +135,28 @@ SELECT pbi.isolate_id,
   FROM pbi.isolates_with_irida as pbi
   LEFT JOIN wgs                   ON wgs.isolate_id    = pbi.isolate_id
   LEFT JOIN bioinf.mob_rgi AS mob ON mob.sequencing_id = wgs.sequencing_id;
+
+CREATE VIEW pbi.n_amr_genes_per_isolates
+AS
+SELECT isolate_id,
+       scientific_name,
+       cut_off,
+       count(best_hit_aro) AS n_amr_genes
+FROM pbi.mob_rgi as pbi
+group by isolate_id, cut_off, scientific_name
+order by isolate_id;
+
+CREATE VIEW pbi.n_amr_genes_per_org
+AS
+select n_amr_genes,
+       cut_off,
+       scientific_name,
+       count(*)
+from pbi.n_amr_genes_per_isolates
+group by n_amr_genes, cut_off, scientific_name
+order by n_amr_genes;
+
+
+
+
 
