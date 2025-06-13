@@ -37,7 +37,7 @@ WITH all_terms AS (
 ) SELECT sample_id, field_type, term_id FROM all_terms WHERE term_id NOT IN (select id from ontology_terms where en_term LIKE 'Not%');
 
 
-CREATE view source_type
+CREATE view pbi.source_type
 AS
 WITH src AS (
 SELECT sam.id as sample_id,
@@ -57,13 +57,14 @@ CASE WHEN host_organism =  (SELECT id from host_organisms where en_common_name =
 from src
 LEFT JOIN host_organisms AS org ON org.id = src.host_organism;
 
-CREATE VIEW isolates_with_irida
+CREATE VIEW pbi.isolates_with_irida
 AS
-select org.scientific_name AS "Assigned Organism",
-       src.source_type     AS "Source Type",
-       extract(year from sam.sample_collection_date) AS "Collection Year",
-       reg.en_term AS "Province",
-       contact.contact AS "Contact"
+SELECT iso.id                     AS "isolate_id",
+       org.scientific_name        AS "Assigned Organism",
+       src.source_type            AS "Source Type",
+       sam.sample_collection_date AS "Collection Year",
+       reg.en_term                AS "Province",
+       contact.contact            AS "Contact"
   FROM isolates AS iso
   LEFT JOIN samples                AS sam     ON sam.id             = iso.sample_id
   LEFT JOIN pbi.simple_contacts    AS contact ON contact.contact_id = sam.contact_information
@@ -71,3 +72,4 @@ select org.scientific_name AS "Assigned Organism",
   LEFT JOIN source_type            AS src     ON src.sample_id      = iso.sample_id
   LEFT JOIN state_province_regions AS reg     ON reg.id             = sam.geo_loc_name_state_province_region
  WHERE irida_sample_id IS NOT NULL;
+
