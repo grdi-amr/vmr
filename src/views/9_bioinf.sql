@@ -1,3 +1,43 @@
+CREATE VIEW bioinf.rgi_by_drug_class
+AS
+SELECT id,
+       sequencing_id,
+       orf_id,
+       unnest(string_to_array(drug_class, ', ')) AS drug_class
+  FROM bioinf.mob_rgi;
+
+CREATE VIEW bioinf.rgi_by_antibiotic
+AS
+SELECT id,
+       sequencing_id,
+       orf_id,
+       unnest(string_to_array(drug_class, ', ')) AS drug_class
+  FROM bioinf.mob_rgi;
+
+CREATE VIEW bioinf.rgi_by_gene_family
+AS
+SELECT id,
+       sequencing_id,
+       orf_id,
+       unnest(string_to_array(amr_gene_families, '; ')) AS drug_class
+  FROM bioinf.mob_rgi;
+
+CREATE VIEW bioinf.rgi_by_resistance_mechanism
+AS
+SELECT id,
+       sequencing_id,
+       orf_id,
+       unnest(string_to_array(resistance_mechanism, '; ')) AS drug_class
+  FROM bioinf.mob_rgi;
+
+CREATE VIEW bioinf.antibiotic
+AS
+SELECT id,
+       sequencing_id,
+       orf_id,
+       unnest(string_to_array(antibiotic, '; ')) AS drug_class
+  FROM bioinf.mob_rgi;
+
 CREATE SCHEMA IF NOT EXISTS pbi;
 
 CREATE view pbi.simple_contacts
@@ -72,4 +112,27 @@ SELECT iso.id                     AS "isolate_id",
   LEFT JOIN pbi.source_type        AS src     ON src.sample_id      = iso.sample_id
   LEFT JOIN state_province_regions AS reg     ON reg.id             = sam.geo_loc_name_state_province_region
  WHERE irida_sample_id IS NOT NULL;
+
+CREATE VIEW pbi.mob_rgi
+AS
+SELECT pbi.isolate_id,
+       pbi."Assigned Organism",
+       pbi."Source Type",
+       pbi."Collection Year",
+       pbi."Province",
+       pbi."Contact",
+       wgs.sequencing_id,
+       mob.cut_off,
+       mob.best_hit_aro,
+       mob.best_hit_bitscore,
+       mob.drug_class,
+       mob.resistance_mechanism,
+       mob.amr_gene_families,
+       mob.antibiotic,
+       mob.molecule_type,
+       mob.primary_cluster_id,
+       mob.secondary_cluster_id
+  FROM pbi.isolates_with_irida as pbi
+  LEFT JOIN wgs                   ON wgs.isolate_id    = pbi.isolate_id
+  LEFT JOIN bioinf.mob_rgi AS mob ON mob.sequencing_id = wgs.sequencing_id;
 
