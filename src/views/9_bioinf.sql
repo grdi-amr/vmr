@@ -160,10 +160,11 @@ SELECT rgi.isolate_id,
        rgi.contact_information,
        rgi.sequencing_id,
        rgi.orf_id,
+       rgi.best_hist_aro,
       drug.drug_class,
-      ab.antibiotic,
-     fam.amr_gene_families,
-    mech.resistance_mechanism
+        ab.antibiotic,
+       fam.amr_gene_families,
+      mech.resistance_mechanism
   FROM pbi.mob_rgi AS rgi
 LEFT JOIN bioinf.rgi_by_drug_class           AS drug ON drug.orf_id = rgi.orf_id AND drug.sequencing_id = rgi.sequencing_id
 LEFT JOIN bioinf.rgi_by_antibiotic           AS ab   ON   ab.orf_id = rgi.orf_id AND   ab.sequencing_id = rgi.sequencing_id
