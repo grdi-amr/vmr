@@ -11,7 +11,7 @@ AS
 SELECT id,
        sequencing_id,
        orf_id,
-       unnest(string_to_array(drug_class, ', ')) AS drug_class
+       unnest(string_to_array(antibiotic, '; ')) AS antibiotic
   FROM bioinf.mob_rgi;
 
 CREATE VIEW bioinf.rgi_by_gene_family
@@ -19,7 +19,7 @@ AS
 SELECT id,
        sequencing_id,
        orf_id,
-       unnest(string_to_array(amr_gene_families, '; ')) AS drug_class
+       unnest(string_to_array(amr_gene_families, '; ')) AS amr_gene_families
   FROM bioinf.mob_rgi;
 
 CREATE VIEW bioinf.rgi_by_resistance_mechanism
@@ -27,15 +27,7 @@ AS
 SELECT id,
        sequencing_id,
        orf_id,
-       unnest(string_to_array(resistance_mechanism, '; ')) AS drug_class
-  FROM bioinf.mob_rgi;
-
-CREATE VIEW bioinf.antibiotic
-AS
-SELECT id,
-       sequencing_id,
-       orf_id,
-       unnest(string_to_array(antibiotic, '; ')) AS drug_class
+       unnest(string_to_array(resistance_mechanism, '; ')) AS resistance_mechanism
   FROM bioinf.mob_rgi;
 
 CREATE SCHEMA IF NOT EXISTS pbi;
@@ -122,6 +114,7 @@ SELECT pbi.isolate_id,
        pbi.province,
        pbi.contact_information,
        wgs.sequencing_id,
+       mob.orf_id,
        mob.cut_off,
        mob.best_hit_aro,
        mob.best_hit_bitscore,
@@ -141,9 +134,10 @@ AS
 SELECT isolate_id,
        scientific_name,
        cut_off,
+       source_type,
        count(best_hit_aro) AS n_amr_genes
 FROM pbi.mob_rgi as pbi
-group by isolate_id, cut_off, scientific_name
+group by isolate_id, cut_off, scientific_name, source_type
 order by isolate_id;
 
 CREATE VIEW pbi.n_amr_genes_per_org
@@ -156,7 +150,23 @@ from pbi.n_amr_genes_per_isolates
 group by n_amr_genes, cut_off, scientific_name
 order by n_amr_genes;
 
-
-
-
+CREATE VIEW pbi.all_rgi_tags
+AS
+SELECT rgi.isolate_id,
+       rgi.scientific_name,
+       rgi.source_type,
+       rgi.sample_collection_date,
+       rgi.province,
+       rgi.contact_information,
+       rgi.sequencing_id,
+       rgi.orf_id,
+      drug.drug_class,
+      ab.antibiotic,
+     fam.amr_gene_families,
+    mech.resistance_mechanism
+  FROM pbi.mob_rgi AS rgi
+LEFT JOIN bioinf.rgi_by_drug_class           AS drug ON drug.orf_id = rgi.orf_id AND drug.sequencing_id = rgi.sequencing_id
+LEFT JOIN bioinf.rgi_by_antibiotic           AS ab   ON   ab.orf_id = rgi.orf_id AND   ab.sequencing_id = rgi.sequencing_id
+LEFT JOIN bioinf.rgi_by_gene_family          AS fam  ON  fam.orf_id = rgi.orf_id AND  fam.sequencing_id = rgi.sequencing_id
+LEFT JOIN bioinf.rgi_by_resistance_mechanism AS mech ON mech.orf_id = rgi.orf_id AND mech.sequencing_id = rgi.sequencing_id;
 
