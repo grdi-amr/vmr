@@ -124,10 +124,13 @@ SELECT pbi.isolate_id,
        mob.antibiotic,
        mob.molecule_type,
        mob.primary_cluster_id,
-       mob.secondary_cluster_id
+       mob.secondary_cluster_id,
+      mlst.mlst_sequence,
+      mlst.scheme,
   FROM pbi.isolates_with_irida as pbi
-  LEFT JOIN wgs                   ON wgs.isolate_id    = pbi.isolate_id
-  LEFT JOIN bioinf.mob_rgi AS mob ON mob.sequencing_id = wgs.sequencing_id;
+  LEFT JOIN wgs                    ON  wgs.isolate_id    = pbi.isolate_id
+  LEFT JOIN bioinf.mob_rgi AS mob  ON  mob.sequencing_id = wgs.sequencing_id;
+  LEFT JOIN bioing.mlst    AS mlst ON mlst.sequencing_id = wgs.sequencing_id;
 
 CREATE VIEW pbi.n_amr_genes_per_isolates
 AS
@@ -170,4 +173,5 @@ LEFT JOIN bioinf.rgi_by_drug_class           AS drug ON drug.orf_id = rgi.orf_id
 LEFT JOIN bioinf.rgi_by_antibiotic           AS ab   ON   ab.orf_id = rgi.orf_id AND   ab.sequencing_id = rgi.sequencing_id
 LEFT JOIN bioinf.rgi_by_gene_family          AS fam  ON  fam.orf_id = rgi.orf_id AND  fam.sequencing_id = rgi.sequencing_id
 LEFT JOIN bioinf.rgi_by_resistance_mechanism AS mech ON mech.orf_id = rgi.orf_id AND mech.sequencing_id = rgi.sequencing_id;
+
 
