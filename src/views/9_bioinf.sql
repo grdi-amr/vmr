@@ -91,24 +91,32 @@ LEFT JOIN host_organisms AS org ON org.id = src.host_organism;
 
 CREATE VIEW pbi.isolates_with_irida
 AS
-SELECT iso.id          AS isolate_id,
-       org.scientific_name,
+SELECT iso.id              AS isolate_id,
+       org.scientific_name AS submitted_organism_name,
        src.source_type,
        sam.sample_collection_date,
        reg.en_term     AS province,
-       contact.contact AS contact_information
+       contact.contact AS contact_information,
+       iso.irida_project_id,
+       iso.irida_sample_id,
+       wgs.sequencing_date,
+       ontology_full_term(wgs.sequencing_instrument) AS sequencing_instrument,
+      mlst.mlst_scheme,
+      mlst.mlst_sequence
   FROM isolates AS iso
   LEFT JOIN samples                AS sam     ON sam.id             = iso.sample_id
   LEFT JOIN pbi.simple_contacts    AS contact ON contact.contact_id = sam.contact_information
   LEFT JOIN microbes               AS org     ON org.id             = iso.organism
   LEFT JOIN pbi.source_type        AS src     ON src.sample_id      = iso.sample_id
   LEFT JOIN state_province_regions AS reg     ON reg.id             = sam.geo_loc_name_state_province_region
- WHERE irida_sample_id IS NOT NULL;
+  LEFT JOIN wgs                    AS wgs     ON wgs.isolate_id     = iso.id
+  LEFT JOIN bioinf.mlst            AS mlst    ON mlst.sequencing_id = wgs.sequencing_id
+ WHERE iso.irida_sample_id IS NOT NULL;
 
 CREATE VIEW pbi.mob_rgi
 AS
 SELECT pbi.isolate_id,
-       pbi.scientific_name,
+       pbi.submitted_organism_name,
        pbi.source_type,
        pbi.sample_collection_date,
        pbi.province,
@@ -135,28 +143,28 @@ SELECT pbi.isolate_id,
 CREATE VIEW pbi.n_amr_genes_per_isolates
 AS
 SELECT isolate_id,
-       scientific_name,
+       submitted_organism_name,
        cut_off,
        source_type,
        count(best_hit_aro) AS n_amr_genes
 FROM pbi.mob_rgi as pbi
-group by isolate_id, cut_off, scientific_name, source_type
+group by isolate_id, cut_off, submitted_organism_name, source_type
 order by isolate_id;
 
 CREATE VIEW pbi.n_amr_genes_per_org
 AS
 select n_amr_genes,
        cut_off,
-       scientific_name,
+       submitted_organism_name,
        count(*)
 from pbi.n_amr_genes_per_isolates
-group by n_amr_genes, cut_off, scientific_name
+group by n_amr_genes, cut_off, submitted_organism_name
 order by n_amr_genes;
 
 CREATE VIEW pbi.all_rgi_tags
 AS
 SELECT rgi.isolate_id,
-       rgi.scientific_name,
+       rgi.submitted_organism_name,
        rgi.source_type,
        rgi.sample_collection_date,
        rgi.province,
