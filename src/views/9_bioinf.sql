@@ -126,11 +126,11 @@ SELECT pbi.isolate_id,
        mob.primary_cluster_id,
        mob.secondary_cluster_id,
       mlst.mlst_sequence,
-      mlst.scheme,
+      mlst.mlst_scheme
   FROM pbi.isolates_with_irida as pbi
   LEFT JOIN wgs                    ON  wgs.isolate_id    = pbi.isolate_id
-  LEFT JOIN bioinf.mob_rgi AS mob  ON  mob.sequencing_id = wgs.sequencing_id;
-  LEFT JOIN bioing.mlst    AS mlst ON mlst.sequencing_id = wgs.sequencing_id;
+  LEFT JOIN bioinf.mob_rgi AS mob  ON  mob.sequencing_id = wgs.sequencing_id
+  LEFT JOIN bioinf.mlst    AS mlst ON mlst.sequencing_id = wgs.sequencing_id;
 
 CREATE VIEW pbi.n_amr_genes_per_isolates
 AS
