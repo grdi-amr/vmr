@@ -92,6 +92,7 @@ LEFT JOIN host_organisms AS org ON org.id = src.host_organism;
 CREATE VIEW pbi.isolates_with_irida
 AS
 SELECT iso.id              AS isolate_id,
+       iso.isolate_id      AS submitter_isolate_id,
        org.scientific_name AS submitted_organism_name,
        src.source_type,
        sam.sample_collection_date,
