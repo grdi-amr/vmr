@@ -173,6 +173,9 @@ SELECT rgi.isolate_id,
        rgi.sequencing_id,
        rgi.orf_id,
        rgi.best_hit_aro,
+       rgi.molecule_type,
+       rgi.primary_cluster_id,
+       rgi.secondary_cluster_id,
       drug.drug_class,
         ab.antibiotic,
        fam.amr_gene_families,
@@ -182,5 +185,13 @@ LEFT JOIN bioinf.rgi_by_drug_class           AS drug ON drug.orf_id = rgi.orf_id
 LEFT JOIN bioinf.rgi_by_antibiotic           AS ab   ON   ab.orf_id = rgi.orf_id AND   ab.sequencing_id = rgi.sequencing_id
 LEFT JOIN bioinf.rgi_by_gene_family          AS fam  ON  fam.orf_id = rgi.orf_id AND  fam.sequencing_id = rgi.sequencing_id
 LEFT JOIN bioinf.rgi_by_resistance_mechanism AS mech ON mech.orf_id = rgi.orf_id AND mech.sequencing_id = rgi.sequencing_id;
+
+
+select * from pbi.all_rgi_tags where molecule_type = 'plasmid';
+
+select source_type, submitted_organism_name, province, count(distinct(orf_id))
+  from pbi.mob_rgi
+ WHERE molecule_type = 'plasmid'
+group by source_type, submitted_organism_name, province;
 
 
