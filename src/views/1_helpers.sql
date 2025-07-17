@@ -98,6 +98,7 @@ SELECT pro.id                         AS project_id,
 CREATE OR REPLACE VIEW wgs
        AS
    SELECT wgs.isolate_id,
+	  iso.irida_sample_id,
           ext.id AS extraction_id,
           seq.id AS sequencing_id,
           seq.library_id,
@@ -135,7 +136,8 @@ CREATE OR REPLACE VIEW wgs
           seq.r2_irida_id
      FROM wgs_extractions AS wgs
 LEFT JOIN extractions     AS ext ON wgs.extraction_id = ext.id
-LEFT JOIN sequencing      AS seq ON ext.id            = seq.extraction_id;
+LEFT JOIN sequencing      AS seq ON ext.id            = seq.extraction_id
+LEFT JOIN isolates 	  AS iso ON iso.id 	      = wgs.isolate_id;
 
 CREATE OR REPLACE VIEW latest_version
 AS

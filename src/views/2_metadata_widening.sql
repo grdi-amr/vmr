@@ -166,6 +166,7 @@ SELECT iso.id                                                   AS isolate_id,
 CREATE OR REPLACE VIEW wgs_wide
        AS
 SELECT wgs.isolate_id                                             AS isolate_id,
+       wgs.irida_sample_id,
        wgs.library_id                                             AS user_library_id,
        wgs.experimental_protocol_field,
        ontology_full_term(wgs.experimental_specimen_role_type)    AS experimental_specimen_role_type,
