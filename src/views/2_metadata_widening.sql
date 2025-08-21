@@ -9,7 +9,7 @@ GROUP BY sample_id
 )
 SELECT sam.id                          AS sample_id,
        sam.sample_collector_sample_id,
-       alt.alternative_sample_ids,
+       alt.alternative_sample_ids      AS alternative_sample_id,
        pro.project_name                AS sample_collection_project_name,
        pro.description                 AS project_description,
        pro.sample_plan_id,
@@ -45,7 +45,7 @@ SELECT sam.id                          AS sample_id,
        ontology_full_term(sam.sample_volume_measurement_unit)       AS sample_volume_measurement_unit,
        sam.sample_storage_duration_value,
        ontology_full_term(sam.sample_storage_duration_unit)         AS sample_storage_duration_unit,
-       sam.residual_sample_status,
+       ontology_full_term(sam.residual_sample_status)               AS residual_sample_status,
        -- Geographical information
        bind_ontology(cnt.en_term, cnt.ontology_id) AS geo_loc_name_country,
        bind_ontology(sta.en_term, sta.ontology_id) AS geo_loc_name_state_province_region,
