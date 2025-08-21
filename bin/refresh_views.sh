@@ -1,7 +1,6 @@
 #!/bin/bash
 echo -n "Enter psql password: "
 read -s PGPASSWORD
-echo \n
 export PGPASSWORD
 
 # A command to get all views
