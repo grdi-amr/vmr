@@ -1,4 +1,5 @@
--- adding columns related to patothype to ectyper
+INSERT INTO db_versions (major_release, minor_release, script_name, grdi_template_version, date_applied, note)
+   VALUES (1,19,'v1.19.sql', 'v14.5.4', CURRENT_DATE, 'Adds new pathotype columns to bioinf table to accomodate the update to ectyper');
 
 ALTER TABLE bioinf.ecoli_serotyping
 ADD COLUMN pathotype TEXT,
