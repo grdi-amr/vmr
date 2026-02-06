@@ -9,7 +9,7 @@ CREATE TABLE bioinf.bacmet (
     start_pos         INTEGER NOT NULL,
     end_pos           INTEGER NOT NULL,
     strand            CHAR(1) CHECK (strand IN ('+', '-')),
-    gene              TEXT
+    gene              TEXT,
     -- Alignment metrics
     coverage          TEXT,
     coverage_map      TEXT,
@@ -19,5 +19,5 @@ CREATE TABLE bioinf.bacmet (
     -- BacMet-specific
     database          TEXT,
     prediction_status TEXT NOT NULL CHECK (prediction_status IN ('confirmed', 'predicted')),
-    resistance        TEXT,
+    resistance        TEXT
 );
