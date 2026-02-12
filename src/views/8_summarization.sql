@@ -86,18 +86,20 @@ LEFT JOIN full_sample_metadata   AS wide  ON wide.sample_id = sam.id;
 
 CREATE VIEW n_records_per_contact_per_org
 AS
-SELECT ci.contact_name                                    AS "Contact Name",
-      org.scientific_name                                 AS "Organism",
-          COUNT(DISTINCT(sam.sample_collector_sample_id)) AS "N Samples",
-          COUNT(DISTINCT(iso.isolate_id))                 AS "N Isolates",
-          COUNT(DISTINCT(wgs.sequencing_id))              AS "N WGS",
-          COUNT(DISTINCT(wgs.irida_sample_id))            AS "N Linked in IRIDA",
-          GREATEST(MAX(sam.inserted_at),
-                   MAX(iso.inserted_at))::date            AS "Date Last Received"
+SELECT pro.contact_name                                    AS "Contact Name",
+       pro.project_name                                    AS "Project Name",
+       org.scientific_name                                 AS "Organism",
+           COUNT(DISTINCT(sam.sample_collector_sample_id)) AS "N Samples",
+           COUNT(DISTINCT(iso.isolate_id))                 AS "N Isolates",
+           COUNT(DISTINCT(wgs.sequencing_id))              AS "N WGS",
+           COUNT(DISTINCT(wgs.irida_sample_id))            AS "N Linked in IRIDA",
+           GREATEST(MAX(sam.inserted_at),
+                    MAX(iso.inserted_at))::date            AS "Date Last Received"
      FROM samples             AS sam
-LEFT JOIN contact_information AS ci  ON  ci.id         = sam.contact_information
+LEFT JOIN projects            AS pro ON pro.id         = sam.project_id
 LEFT JOIN isolates            AS iso ON iso.sample_id  = sam.id
 LEFT JOIN wgs                        ON wgs.isolate_id = iso.id
 LEFT JOIN microbes            AS org ON iso.organism   = org.id
- GROUP BY ci.contact_name,
-         org.scientific_name;
+ GROUP BY pro.contact_name,
+          pro.project_name,
+          org.scientific_name;
