@@ -84,6 +84,26 @@ LEFT JOIN samples                AS sam   ON sam.id         = iso.sample_id
 LEFT JOIN state_province_regions AS prov  ON prov.id        = sam.geo_loc_name_state_province_region
 LEFT JOIN full_sample_metadata   AS wide  ON wide.sample_id = sam.id;
 
+CREATE VIEW isolate_and_wgs_per_project
+AS
+SELECT pro.contact_name                                    AS "Project Contact Name",
+       pro.project_name                                    AS "Project Name",
+       iso.isolate_id                                      AS "User Isolate ID",
+       org.scientific_name                                 AS "Assigned Organism",
+       CASE WHEN iso.irida_sample_id IS NOT NULL THEN TRUE
+            ELSE FALSE END                                 AS "Isolate in IRIDA?",
+       iso.irida_sample_id                                 AS "IRIDA numerical ID",
+       CASE WHEN wgs.sequencing_id IS NOT NULL THEN TRUE
+            ELSE FALSE END                                 AS "Sequenced?",
+       wgs.library_id                                      AS "User Library ID",
+       CASE WHEN wgs.r1_irida_id IS NOT NULL THEN TRUE
+            ELSE FALSE END                                 AS "Sequence linked in IRIDA?"
+     FROM isolates AS iso
+LEFT JOIN wgs                        ON wgs.isolate_id = iso.id
+LEFT JOIN microbes            AS org ON iso.organism   = org.id
+LEFT JOIN samples             AS sam ON sam.id         = iso.sample_id
+LEFT JOIN projects            AS pro ON pro.id         = sam.project_id;
+
 CREATE VIEW n_records_per_contact_per_org
 AS
 SELECT pro.contact_name                                    AS "Contact Name",
