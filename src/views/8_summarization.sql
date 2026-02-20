@@ -96,7 +96,7 @@ SELECT pro.contact_name                                    AS "Project Contact N
        CASE WHEN wgs.sequencing_id IS NOT NULL THEN TRUE
             ELSE FALSE END                                 AS "Sequenced?",
        wgs.library_id                                      AS "User Library ID",
-       CASE WHEN wgs.r1_irida_id IS NOT NULL THEN TRUE
+       CASE WHEN wgs.r1_fastq_filename IS NOT NULL THEN TRUE
             ELSE FALSE END                                 AS "Sequence linked in IRIDA?"
      FROM isolates AS iso
 LEFT JOIN wgs                        ON wgs.isolate_id = iso.id
