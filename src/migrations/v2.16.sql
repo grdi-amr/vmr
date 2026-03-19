@@ -1,5 +1,5 @@
 INSERT INTO db_versions (major_release, minor_release, script_name, grdi_template_version, date_applied, note)
-   VALUES (2,14,'v2.14.sql', 'v14.5.4', CURRENT_DATE, 'Adds new ontology terms to accomodate Rahat Zaheer data');
+   VALUES (2,16,'v2.16.sql', 'v14.5.4', CURRENT_DATE, 'Adds new ontology terms to accomodate Rahat Zaheer data');
 
 -- Insert new term into agencies
 WITH new_terms AS (
