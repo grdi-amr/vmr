@@ -1,3 +1,6 @@
+INSERT INTO db_versions (major_release, minor_release, script_name, grdi_template_version, date_applied, note)
+   VALUES (2,18,'v2.18.sql', 'v14.5.4', CURRENT_DATE, 'New tables for QC bioinformatics results');
+
 -- raw qc
 CREATE TABLE bioinf.qc_raw_read_quality (
     id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
