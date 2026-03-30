@@ -1,3 +1,6 @@
+INSERT INTO db_versions (major_release, minor_release, script_name, grdi_template_version, date_applied, note)
+   VALUES (2,17,'v2.17.sql', 'v14.5.4', CURRENT_DATE, 'Adds columns to vfdb table, and adds a table for phaster_blastp results');
+
 -- phaster table
 CREATE TABLE bioinf.phaster_blastp_hits (
     id int4 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -10,8 +13,8 @@ CREATE TABLE bioinf.phaster_blastp_hits (
 
     phaster_id TEXT,
 
-    coverage_raw TEXT,       
-    gaps_raw TEXT,           
+    coverage_raw TEXT,
+    gaps_raw TEXT,
 
     coverage_percent FLOAT,
     identity_percent FLOAT,
@@ -22,10 +25,7 @@ CREATE TABLE bioinf.phaster_blastp_hits (
     product_description TEXT
 );
 
-
-
 -- Adding columns to vfdb table
-
 ALTER TABLE bioinf.virulence_vfdb
 ADD COLUMN file_name TEXT,              -- #FILE (e.g. AMC1007.fna)
 ADD COLUMN sequence_id TEXT,            -- contig (NODE_...)
