@@ -63,11 +63,15 @@ LEFT JOIN get_tool_run_bool('qc_seqkit_stats')       AS qc_seqkit_stats       ON
 LEFT JOIN get_tool_run_bool('refseq_masher')         AS refseq_masher         ON         refseq_masher.sequence_id   = seq.id
 LEFT JOIN get_tool_run_bool('bacmet')                AS bacmet                ON                bacmet.sequence_id   = seq.id;
 
-
-CREATE VIEW percent_tools_run_per_species
+CREATE OR REPLACE VIEW top_refseq_masher_taxon
 AS
+SELECT id, sequencing_id, top_taxonomy_name, taxonomic_species
+  FROM ( SELECT *, RANK() OVER(PARTITION BY sequencing_id ORDER BY distance ASC, length(top_taxonomy_name) ASC) AS rn FROM bioinf.refseq_masher)
+ WHERE rn = 1;
 
-SELECT species                                   AS species,
+CREATE OR REPLACE VIEW percent_tools_run_per_species
+AS
+SELECT taxonomic_species                         AS species,
        ROUND(AVG(digis_elements::int),        2) AS digis_elements,
        ROUND(AVG(ecoli_serotyping::int),      2) AS ecoli_serotyping,
        ROUND(AVG(iceberg_blastn_genome::int), 2) AS iceberg_blastn_genome,
@@ -89,6 +93,6 @@ SELECT species                                   AS species,
        ROUND(AVG(qc_seqkit_stats::int),       2) AS qc_seqkit_stats,
        ROUND(AVG(refseq_masher::int),         2) AS refseq_masher,
        ROUND(AVG(bacmet::int),                2) AS bacmet
-FROM bioinf_tools_run_per_seq
-GROUP BY species
-ORDER BY n DESC;
+FROM bioinf_tools_run_per_seq AS x
+LEFT JOIN top_refseq_masher_taxon AS top_taxon ON top_taxon.sequencing_id = x.sequencing_id
+GROUP BY species;
