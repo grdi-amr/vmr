@@ -2,48 +2,44 @@ CREATE SCHEMA pbi;
 
 CREATE OR REPLACE VIEW project_stats
 AS
-SELECT p.id AS database_id, 
-       p.sample_plan_id AS "Sample plan ID",
-       p.sample_plan_name AS "Sample plan name",
-       project_name AS "Project name",
-       Count(DISTINCT s.id) AS "Number of Samples",
-       Count(DISTINCT i.id) AS "Number of Isolates",
-       Count(DISTINCT wgs.sequencing_id) AS "Number of WGS",
-       Count(DISTINCT ab.id) AS "Number of AST"
-  FROM projects AS p
-       LEFT JOIN samples AS s
-	      ON p.id = s.project_id
-       LEFT JOIN isolates AS i
-	      ON i.sample_id = s.id
-       LEFT JOIN wgs 
-	      ON wgs.isolate_id = i.id
-       LEFT JOIN am_susceptibility_tests as ab
-	      ON ab.isolate_id =  i.id
+   SELECT p.id                              AS database_id,
+          p.sample_plan_id                  AS "Sample plan ID",
+          p.sample_plan_name                AS "Sample plan name",
+          project_name                      AS "Project name",
+          COUNT(DISTINCT s.id)              AS "Number of Samples",
+          COUNT(DISTINCT i.id)              AS "Number of Isolates",
+          COUNT(DISTINCT wgs.sequencing_id) AS "Number of WGS",
+          COUNT(DISTINCT ab.id)             AS "Number of AST"
+     FROM projects                AS p
+LEFT JOIN samples                 AS s  ON   p.id         = s.project_id
+LEFT JOIN isolates                AS i  ON   i.sample_id  = s.id
+LEFT JOIN wgs                           ON wgs.isolate_id = i.id
+LEFT JOIN am_susceptibility_tests AS ab ON  ab.isolate_id = i.id
 GROUP BY p.id;
 
 DROP VIEW IF EXISTS pro_sam_iso_wgs_ids CASCADE;
 CREATE OR REPLACE VIEW pro_sam_iso_wgs_ids
-AS 
-select pro.project_id, 
+AS
+select pro.project_id,
        pro.project_name,
-       pro.sample_id, 
-       pro.sample_collector_sample_id, 
+       pro.sample_id,
+       pro.sample_collector_sample_id,
        pro.isolate_id,
-       pro.user_isolate_id, 
-       wgs.sequencing_id, 
+       pro.user_isolate_id,
+       wgs.sequencing_id,
        wgs.library_id
-from wgs 
+from wgs
 INNER JOIN projects_samples_isolates AS pro ON pro.isolate_id = wgs.isolate_id
 ;
 
 CREATE OR REPLACE VIEW pbi.arg
 AS
 WITH iso_orgs AS (
-  SELECT isolates.id AS isolate_id, 
+  SELECT isolates.id              AS isolate_id,
 	 microbes.scientific_name AS organism
   FROM isolates
   LEFT JOIN microbes ON microbes.id = isolates.organism
-), 
+),
 loc AS (
   SELECT sample_id AS sample_id,
          c.en_term AS country,
@@ -77,9 +73,9 @@ FROM pro_sam_iso_wgs_ids AS pro
 
 CREATE VIEW pbi.seq_counts
 AS
-SELECT project_name, 
-       organism, 
-       COUNT(DISTINCT sequencing_id) AS n_sequences, 
+SELECT project_name,
+       organism,
+       COUNT(DISTINCT sequencing_id) AS n_sequences,
        COUNT(DISTINCT isolate_id) AS n_isolates
 FROM pbi.arg
 GROUP BY project_name, organism
@@ -90,12 +86,12 @@ AS
 SELECT project_name,
        user_isolate_id,
        library_id,
-       organism, 
+       organism,
        cut_off,
        COUNT(amr_genes_id) AS n_arg,
        CASE WHEN COUNT(amr_genes_id) > 0 THEN TRUE
 	    WHEN COUNT(amr_genes_id) = 0 THEN FALSE
-	    ELSE NULL 
+	    ELSE NULL
         END AS has_arg
 FROM pbi.arg AS arg
 GROUP BY project_name, user_isolate_id, library_id, organism, cut_off
@@ -105,14 +101,14 @@ CREATE OR REPLACE VIEW pbi.arg_drugs
 AS
 SELECT arg.project_name,
        arg.organism,
-       arg.library_id, 
+       arg.library_id,
        arg.amr_genes_id,
        arg.region AS province,
        arg.best_hit_aro,
        arg.cut_off,
        drugs.drug_id
 FROM pbi.arg AS arg
-     INNER JOIN bioinf.amr_genes_drugs AS drugs 
+     INNER JOIN bioinf.amr_genes_drugs AS drugs
      ON arg.amr_genes_id = drugs.amr_genes_id
 ;
 
